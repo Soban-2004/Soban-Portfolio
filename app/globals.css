@@ -1,0 +1,503 @@
+@import "tailwindcss";
+
+/*
+  "Terminal Signal" theme — dark-mode-only (IMPLEMENTATION.md §5.2), no
+  light-mode variant. Deliberately not the common blue-on-near-black AI
+  portfolio palette: a warm (not blue-tinted) near-black, a phosphor-green
+  accent evoking instrument/terminal output, mono-forward headlines. Tokens
+  defined once here via Tailwind's @theme inline so every utility class
+  (bg-background, text-accent, etc.) stays in sync with this single source.
+*/
+:root {
+  --background: #0b0d0a;
+  --surface: #14170f;
+  --surface-border: rgba(232, 240, 230, 0.09);
+
+  --accent: #3ecf8e;
+  --accent-soft: #6ee8ac;
+
+  --foreground: #e8f0e6;
+  --muted: #96a395;
+
+  /* Success/verified now needs to read distinctly from the primary accent
+     (which is itself green) — a cool cyan keeps it legible as a separate
+     signal rather than "the same green, again." */
+  --success: #4db8d9;
+  --amber: #e0a63e;
+  /* A second, sparing accent for the one or two spots that want a "hot"
+     pop against the lime (Commit Log reference) — a latency number, one
+     project card border. Never more than that. */
+  --critical: #ff3b6e;
+
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-amber: var(--amber);
+  --color-critical: var(--critical);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-bungee);
+  --font-display-3d: var(--font-press-start-2p);
+}
+
+html {
+  color-scheme: dark;
+  /* Anchor nav (clicking "About", the logo, etc.) glides instead of
+     jump-cutting. Native CSS, zero JS cost — the reduced-motion block below
+     already forces this back to instant for anyone who needs that. */
+  scroll-behavior: smooth;
+}
+
+/* A normal pointer shape, just pixel-art and phosphor green instead of the
+   OS default — a plain `cursor: url()`, not a JS-tracked replacement
+   element, so there's no mount delay/flash-of-native-cursor to guard
+   against and it works identically over every element, including ones
+   React never touches (native browser UI, iframes, etc). Falls back to the
+   real system cursor immediately if the image fails to load. Interactive
+   elements get the same image but keep `pointer` as their fallback so the
+   semantic affordance survives even if the custom image doesn't load. */
+html {
+  cursor: url("/cursor-pixel.svg") 1 1, auto;
+}
+a,
+button,
+[role="button"],
+input,
+textarea,
+select,
+label {
+  cursor: url("/cursor-pixel.svg") 1 1, pointer;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Bold urban-signage block headlines (Bungee) — applied globally rather
+   than per-component, so every heading site-wide gets a genuinely
+   distinctive identity. The handful of showpiece headlines (section
+   titles, hero, contact) opt up to Press Start 2P — a real 8-bit pixel
+   face — via the font-display-3d utility. Body copy stays on Inter;
+   data/tags stay on JetBrains Mono, since these display faces get
+   illegible at small sizes.
+   Wrapped in @layer base: unlayered rules always beat layered ones in CSS
+   cascade layers regardless of specificity — without this, a component
+   opting a heading into a different font via a utility class could never
+   win against a plain top-level h1 selector. */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* The "coming out of the screen" pixel bulge for .font-display-3d
+   (Tailwind's auto-generated font-family utility from --font-display-3d
+   only sets font-family — this rule adds to it, doesn't fight it, so no
+   cascade-layer ordering issue).
+   Black face, green all the way around — a stroke gives the green border
+   on every edge (not just the bottom-right), and a short, tight shadow
+   stack gives it depth. First pass stacked shadow offsets deep enough
+   (0.24em total) that on Press Start 2P's thin single-pixel-block strokes
+   the green shadow layers fully swallowed the black face — nothing but
+   green was left. Cut the reach to 0.08em total so black stays the
+   dominant fill and green reads as a border/bulge, not the whole glyph. */
+.font-display-3d {
+  /* Unlayered, same as the stroke/shadow below — this deliberately rides
+     the cascade-layers quirk noted above the h1–h4 rule (an unlayered rule
+     always beats a layered Tailwind utility) so this wins over whatever
+     text-* color utility a component applies alongside this class, without
+     having to touch every usage site individually. */
+  color: #050503;
+  -webkit-text-stroke: 0.02em var(--accent);
+  text-shadow:
+    0.02em 0.02em 0 var(--accent),
+    0.04em 0.04em 0 var(--accent),
+    0.06em 0.06em 0 var(--accent),
+    0.08em 0.08em 0 rgba(11, 13, 10, 0.65);
+}
+
+/*
+  A near-invisible grain layer on the background — the difference between
+  "near-black" reading as designed vs. flat. Pure CSS, single inline SVG
+  turbulence filter, no image asset, opacity kept low enough to never
+  interfere with text contrast.
+*/
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#__next,
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+  Cursor-follow spotlight (IMPLEMENTATION.md §4.8's restraint extended to
+  card hover) — a radial gradient tracking pointer position via CSS custom
+  properties set from a pointermove handler. transform/background only,
+  GPU-cheap, disabled on touch (no pointer to follow) and under reduced
+  motion (opacity transition only, no continuous tracking cost either way).
+*/
+.spotlight {
+  position: relative;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: radial-gradient(
+    480px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(62, 207, 142, 0.1),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+@media (hover: none) {
+  .spotlight::before {
+    display: none;
+  }
+}
+
+/* Persistent grid-paper background (Commit Log reference) — unlike
+   .blueprint below (which only appears on hover), this sits low-opacity and
+   always-on behind large open sections, reinforcing the "engineering
+   document" feel without competing with text contrast. */
+/* On a ::before layer, not the element itself: a CSS mask applies to
+   everything an element paints, not just its background-image — putting it
+   directly on .grid-paper was fading the real headline/buttons/content
+   toward the bottom of the section along with the grid, not just the grid. */
+.grid-paper {
+  position: relative;
+}
+.grid-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--surface-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--surface-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+/* AmbientBackground.tsx — fixed to the viewport (not the hero), so this is
+   visible throughout the whole page as you scroll, not just up top. A
+   static, low-opacity/low-contrast texture — no animation, no JS/canvas
+   (an earlier version had a "virus pulse" traveling along these lines,
+   removed per feedback). */
+.ambient-grid {
+  background-image:
+    linear-gradient(to right, var(--surface-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--surface-border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.4;
+}
+
+/* LoadingScreen.tsx "Matrix unlock" dismissal — one grid cell's timeline.
+   Opaque and covering the page for the first chunk (matching the plain
+   bg-background square it replaces mid-animation), then a green glow
+   flashes on right before the cell goes fully transparent and lets the
+   real page show through. Each cell runs this exact same keyframe; only
+   its animation-delay differs (set inline per-cell, based on distance
+   from the top-left corner), which is what turns 60 identical animations
+   into a single top-left → bottom-right cascade. */
+@keyframes matrix-unlock-cell {
+  0% {
+    background: var(--background);
+    box-shadow: none;
+  }
+  45% {
+    background: var(--background);
+    box-shadow:
+      inset 0 0 0 1px rgba(62, 207, 142, 0.6),
+      inset 0 0 20px 2px rgba(62, 207, 142, 0.5);
+  }
+  75% {
+    background: transparent;
+    box-shadow:
+      inset 0 0 0 1px rgba(62, 207, 142, 0.3),
+      inset 0 0 12px 2px rgba(62, 207, 142, 0.2);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+.matrix-unlock-cell {
+  animation: matrix-unlock-cell 380ms ease-out forwards;
+}
+
+/* Hero watermark ("AI ENGINEER") — outlined instead of filled, a dim green
+   neon-tube border, with a second copy stacked exactly on top whose stroke
+   is bright and revealed only inside a narrow diagonal band. Animating
+   that band's mask-position sweeps a "hot" highlight across the letterforms
+   continuously, like a light traveling along a neon sign's tubing, while
+   the dim base stroke stays lit underneath the rest of the time. */
+.watermark-base {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(62, 207, 142, 0.32);
+  text-shadow: 0 0 14px rgba(62, 207, 142, 0.18);
+}
+.watermark-sweep {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(214, 255, 231, 0.95);
+  text-shadow: 0 0 18px rgba(140, 255, 200, 0.85);
+  -webkit-mask-image: linear-gradient(100deg, transparent 35%, white 50%, transparent 65%);
+  mask-image: linear-gradient(100deg, transparent 35%, white 50%, transparent 65%);
+  /* vw-based, not %-of-element: the watermark text itself is oversized
+     (whitespace-nowrap, bleeding off-screen), so sizing the sweep band
+     relative to its own box put the bright stripe's travel range mostly
+     outside the visible letters. Viewport units keep the band a fixed,
+     predictable width that actually crosses the visible text. */
+  -webkit-mask-size: 45vw 100%;
+  mask-size: 45vw 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: watermark-sweep 4.5s linear infinite;
+}
+@keyframes watermark-sweep {
+  0% {
+    -webkit-mask-position: -45vw 0;
+    mask-position: -45vw 0;
+  }
+  100% {
+    -webkit-mask-position: 140vw 0;
+    mask-position: 140vw 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .watermark-sweep {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+    opacity: 0;
+  }
+}
+
+/* About.tsx's Education card — needed to actually draw the eye rather than
+   read as one more line of text under the bio paragraph. A rotating
+   conic-gradient sits on a pseudo-element behind the card; the card itself
+   sits inside a couple of pixels of padding on the wrapper, so only that
+   thin ring shows the gradient through — a bright point of light
+   traveling around the border and back, never sitting still. (First pass
+   used mask-composite: exclude to carve the ring out of a full-box
+   gradient — technically cleaner, but it rendered as a stray diagonal
+   streak bleeding outside the card in headless Chromium, a known
+   mask-composite compositing quirk. This is the older, blunter, but far
+   more reliable "padding + solid inner cover" technique — no masking API
+   involved, just the inner card's own opaque background covering
+   everything except that padding ring, and overflow:hidden on the
+   wrapper clipping the oversized rotating gradient to its rounded-rect
+   bounds so it can never bleed past its own edge either.) Paired with a
+   hard, non-blurred offset shadow on hover (see .edu-glow-border in
+   About.tsx) — the same "coming out of the screen" block-shadow language
+   PaperCard already uses elsewhere, for the "3D" half of the ask. */
+.edu-glow-border {
+  position: relative;
+  overflow: hidden;
+  padding: 2px;
+  isolation: isolate;
+}
+.edu-glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 260deg,
+    rgba(62, 207, 142, 0.85) 300deg,
+    rgba(214, 255, 231, 1) 330deg,
+    rgba(62, 207, 142, 0.85) 355deg,
+    transparent 360deg
+  );
+  animation: edu-border-spin 4.5s linear infinite;
+  pointer-events: none;
+}
+.edu-glow-border > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes edu-border-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edu-glow-border::before {
+    animation: none;
+  }
+}
+
+/* CropMarks.tsx "glow" variant (Contact section's corner "+" marks) —
+   green, lifted off the page via a layered drop-shadow (a hard dark
+   offset for the 3D pop, plus a soft accent glow), spinning fast and
+   continuously. drop-shadow rather than box-shadow/text-shadow since this
+   is an SVG icon, not a box or text.
+   Two different speeds and opposite directions (was one shared 6s spin
+   for both corners) — a single synced duration read as too mechanical for
+   two marks that aren't mechanically linked; different speeds/directions
+   feels more like independent activity than one ornament mirrored twice. */
+.crop-mark-glow-a,
+.crop-mark-glow-b {
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.5)) drop-shadow(0 0 6px rgba(62, 207, 142, 0.7));
+}
+.crop-mark-glow-a {
+  animation: crop-mark-spin 1.1s linear infinite;
+}
+.crop-mark-glow-b {
+  animation: crop-mark-spin-reverse 1.7s linear infinite;
+}
+@keyframes crop-mark-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes crop-mark-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crop-mark-glow-a,
+  .crop-mark-glow-b {
+    animation: none;
+  }
+}
+
+/* A slow breathing glow instead of a static one — used on a couple of
+   accent boxes throughout the page (hero glow, stats banner, contact box)
+   for variety, not just the one scanline effect everywhere. */
+.glow-pulse {
+  animation: glow-breathe 6s ease-in-out infinite;
+}
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.16;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-pulse {
+    animation: none;
+    opacity: 0.1;
+  }
+}
+
+/* Blueprint grid-overlay on hover — a faint engineering-grid texture that
+   appears behind project rows, a small textural nod to "this person builds
+   systems." Background-image opacity only, no layout/paint cost beyond a
+   single composited layer. */
+.blueprint {
+  position: relative;
+}
+.blueprint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background-image:
+    linear-gradient(to right, var(--accent) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--accent) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+.blueprint:hover::after {
+  opacity: 0.05;
+}
+
+/* Editorial hover link — an underline that draws in from the left, used
+   instead of a color-only hover state on inline text links. */
+.underline-hover {
+  position: relative;
+  text-decoration: none;
+}
+.underline-hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transition: right 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.underline-hover:hover::after,
+.underline-hover:active::after {
+  right: 0;
+}
+
+/* Skip-to-content link (IMPLEMENTATION.md §24) */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 50;
+  background: var(--accent);
+  color: var(--background);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Global safety net: any animation not already gated per-component collapses
+   to its end state instantly under reduced motion. Component-level checks
+   (useReducedMotion) still handle the JS-driven interactions individually. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

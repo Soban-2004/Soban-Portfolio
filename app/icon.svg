@@ -1,14 +1,16 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
   <rect width="32" height="32" rx="7" fill="#0B0D0A"/>
-  <g stroke="#3ECF8E" stroke-width="1.6" stroke-linecap="round" opacity="0.9">
-    <line x1="7" y1="24" x2="14" y2="12" />
-    <line x1="14" y1="12" x2="21" y2="20" />
-    <line x1="21" y1="20" x2="26" y2="9" />
-  </g>
+  <!-- Blocky 8-bit "S" — same pixel-grid logic as the Press Start 2P
+       headline font used for the big SOBAN name in the hero, hand-placed
+       as a 5x7 glyph so it reads clearly even shrunk to a real 16px tab
+       icon. Replaces the earlier abstract node-graph mark. -->
   <g fill="#3ECF8E">
-    <circle cx="7" cy="24" r="3" />
-    <circle cx="14" cy="12" r="3" />
-    <circle cx="21" cy="20" r="3" />
-    <circle cx="26" cy="9" r="3" />
+    <rect x="10" y="2" width="4" height="4"/><rect x="14" y="2" width="4" height="4"/><rect x="18" y="2" width="4" height="4"/><rect x="22" y="2" width="4" height="4"/>
+    <rect x="6" y="6" width="4" height="4"/>
+    <rect x="6" y="10" width="4" height="4"/>
+    <rect x="10" y="14" width="4" height="4"/><rect x="14" y="14" width="4" height="4"/><rect x="18" y="14" width="4" height="4"/>
+    <rect x="22" y="18" width="4" height="4"/>
+    <rect x="22" y="22" width="4" height="4"/>
+    <rect x="6" y="26" width="4" height="4"/><rect x="10" y="26" width="4" height="4"/><rect x="14" y="26" width="4" height="4"/><rect x="18" y="26" width="4" height="4"/>
   </g>
 </svg>

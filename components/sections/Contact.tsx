@@ -10,10 +10,10 @@ export function Contact() {
   const shippedCount = projects.filter((p) => p.featured).length;
 
   return (
-    <section id="contact" className="mx-auto max-w-6xl px-6 py-24">
+    <section id="contact" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
       <p className="font-mono text-xs text-accent">// 08 — CONTACT</p>
 
-      <div className="relative mt-6 overflow-hidden rounded-md border border-accent px-6 py-16 sm:px-10">
+      <div className="relative mt-3 overflow-hidden rounded-md border border-accent px-4 py-4 sm:mt-6 sm:px-10 sm:py-16">
         <CropMarks variant="glow" />
         <div
           aria-hidden="true"
@@ -21,14 +21,17 @@ export function Contact() {
           style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
         />
 
-        <h2 className="font-display-3d text-balance text-center text-2xl uppercase leading-[1.5] text-foreground sm:text-3xl md:text-4xl">
+        <h2 className="font-display-3d text-balance text-center text-2xl uppercase leading-[1.3] text-foreground sm:text-3xl sm:leading-[1.5] md:text-4xl">
           Let&apos;s build <Accent>something</Accent> grounded.
         </h2>
 
-        <div className="mx-auto mt-10 max-w-lg">
+        <div className="mx-auto mt-4 max-w-lg sm:mt-10">
           <TerminalPanel title="contact.sh — zsh">
             <p className="font-mono text-xs text-muted">$ contact --engineer soban-shankar</p>
-            <p className="mt-2 font-mono text-xs text-muted/70">Loading profile...</p>
+            {/* Pure flourish, no verified fact in it — the one line here
+                that's safe to drop on mobile only to save a row; every
+                other line is a real, sourced fact and stays. */}
+            <p className="mt-1.5 hidden font-mono text-xs text-muted/70 sm:mt-2 sm:block">Loading profile...</p>
             <p className="font-mono text-xs text-success">
               ✓ AI Engineer — {identity.location} ({identity.relocation})
             </p>
@@ -37,7 +40,7 @@ export function Contact() {
               ✓ 1 OSS PR merged — {openSource.repo}
               {openSource.prNumber}
             </p>
-            <p className="mt-2 font-mono text-xs text-muted">
+            <p className="mt-1.5 font-mono text-xs text-muted sm:mt-2">
               Contact:{" "}
               <a href={`mailto:${identity.email}`} className="underline-hover text-accent-soft">
                 {identity.email}
@@ -49,13 +52,13 @@ export function Contact() {
                 {identity.phone}
               </a>
             </p>
-            <p className="mt-2 font-mono text-xs text-muted/60">
+            <p className="mt-1.5 font-mono text-xs text-muted/60 sm:mt-2">
               <span className="text-accent">_</span> Awaiting your message...
             </p>
           </TerminalPanel>
         </div>
 
-        <div className="mx-auto mt-8 flex max-w-lg flex-wrap justify-center gap-3">
+        <div className="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3">
           <Button href={`mailto:${identity.email}`} variant="accent" external ariaLabel="Send an email">
             $ SEND_MESSAGE
           </Button>

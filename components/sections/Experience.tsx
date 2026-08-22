@@ -134,12 +134,19 @@ function StackedExperience() {
   return (
     <>
       <HistoryHeading />
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
-        <IntroColumn />
-        <div className="flex flex-col gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-8 lg:grid-cols-[280px_1fr]">
+        {/* Cards ordered first on mobile (order-1) so the heading is
+            immediately followed by a full experience card, not by the
+            intro paragraph + stat row — those move below instead. lg+
+            resets both back to source order (intro column on the left,
+            cards on the right), matching the original two-column layout. */}
+        <div className="order-1 flex flex-col gap-4 lg:order-2">
           {cards.map((card) => (
             <ExperienceCard key={card.key} data={card} />
           ))}
+        </div>
+        <div className="order-2 lg:order-1">
+          <IntroColumn />
         </div>
       </div>
     </>
@@ -163,7 +170,7 @@ export function Experience() {
   }, [prefersReducedMotion]);
 
   return (
-    <section id="experience" className="mx-auto max-w-6xl px-6 py-24">
+    <section id="experience" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
       {pinEnabled ? <PinnedExperience /> : <StackedExperience />}
     </section>
   );

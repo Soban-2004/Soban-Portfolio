@@ -41,7 +41,7 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-screen flex-col justify-center overflow-hidden px-6 pt-28 pb-16"
+      className="relative flex min-h-[100dvh] flex-col justify-center overflow-hidden px-6 pt-20 pb-8 sm:pt-28 sm:pb-16"
     >
       <CropMarks />
 
@@ -107,26 +107,30 @@ export function Hero() {
             font (font-display-3d), as large as anything gets on the page.
             The role/headline sentence drops to a smaller, plain-weight
             line underneath: normal-case, sans body font, not the display
-            face — a tagline under a name, not a second display headline. */}
-        <h1 className="mt-5 max-w-4xl text-balance leading-[1.15] text-foreground">
-          <span className="font-display-3d block text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+            face — a tagline under a name, not a second display headline.
+            Base sizes (name, headline, spacing) trimmed one notch for
+            phones only — sm: and up are untouched — so the whole hero,
+            including the buttons/social row, lands inside one mobile
+            viewport instead of needing a scroll to reach them. */}
+        <h1 className="mt-3 max-w-4xl text-balance leading-[1.15] text-foreground sm:mt-5">
+          <span className="font-display-3d block text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
             {identity.name}
           </span>
-          <span className="mt-4 block font-sans text-lg font-normal normal-case tracking-normal text-muted sm:text-xl md:text-2xl">
+          <span className="mt-2 block font-sans text-base font-normal normal-case tracking-normal text-muted sm:mt-4 sm:text-xl md:text-2xl">
             {hero.headline}
           </span>
         </h1>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-[1fr_auto] md:items-end">
-          <p className="max-w-xl text-pretty text-lg text-muted">{hero.subline}</p>
-          <p className="font-mono text-sm text-muted/70">{hero.locationLine}</p>
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-8 sm:gap-6 md:grid-cols-[1fr_auto] md:items-end">
+          <p className="max-w-xl text-pretty text-sm text-muted sm:text-lg">{hero.subline}</p>
+          <p className="font-mono text-xs text-muted/70 sm:text-sm">{hero.locationLine}</p>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-4 sm:mt-8">
           <SystemLog />
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3">
           <Button href="#work" variant="primary">
             $ view --work
           </Button>
@@ -137,16 +141,16 @@ export function Hero() {
             <a
               href={identity.github}
               aria-label="GitHub"
-              className="flex h-11 w-11 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground sm:h-11 sm:w-11"
             >
-              <GitHubIcon size={20} />
+              <GitHubIcon size={18} className="sm:size-5" />
             </a>
             <a
               href={identity.linkedin}
               aria-label="LinkedIn"
-              className="flex h-11 w-11 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground sm:h-11 sm:w-11"
             >
-              <LinkedInIcon size={20} />
+              <LinkedInIcon size={18} className="sm:size-5" />
             </a>
           </div>
         </div>

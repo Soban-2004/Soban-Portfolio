@@ -18,7 +18,7 @@ export function SystemLog() {
 
   return (
     <div className="w-full max-w-md overflow-hidden rounded-lg border border-surface-border bg-surface/60">
-      <div className="flex items-center gap-3 border-b border-surface-border px-3 py-2">
+      <div className="flex items-center gap-3 border-b border-surface-border px-3 py-1.5 sm:py-2">
         <div className="flex gap-1.5" aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-amber/60" />
           <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
@@ -26,7 +26,7 @@ export function SystemLog() {
         </div>
         <span className="font-mono text-xs text-muted">whoami --status</span>
       </div>
-      <div className="space-y-1.5 px-4 py-3">
+      <div className="space-y-1 px-3 py-2 sm:space-y-1.5 sm:px-4 sm:py-3">
         {lines.map((line) => (
           <p key={line} className="font-mono text-xs text-muted">
             <span className="text-accent">[OK]</span> {line}

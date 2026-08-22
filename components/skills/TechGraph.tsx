@@ -149,7 +149,11 @@ export function TechGraph() {
             transition={{ duration: 0.15 }}
             role="tooltip"
             style={{ left: pos.left, top: pos.top }}
-            className="fixed z-20 w-56 rounded-md border border-accent/40 bg-surface p-3 text-left shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]"
+            // w-[224px] (a literal pixel value), not w-56 — w-56 resolves
+            // through Tailwind's fluid --spacing scale (see globals.css)
+            // and would render narrower than 224px below 640px, which
+            // POPOVER_WIDTH above assumes is exact for its clamping math.
+            className="fixed z-20 w-[224px] rounded-md border border-accent/40 bg-surface p-3 text-left shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]"
           >
             <div
               style={{ left: pos.arrowLeft }}

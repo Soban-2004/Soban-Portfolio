@@ -23,6 +23,13 @@ export interface Project {
   name: string;
   period: string;
   description: string;
+  // A plain-language "what is this" sentence, not a shorter cut of
+  // `description` — that field leads with pipeline/architecture detail
+  // (retrieval strategy, tool-call order), which reads fine in full but
+  // turns into an unhelpful fragment when clamped to fit a phone screen
+  // (e.g. cut off mid-list at "Pipeline: query → dense + BM25 retrieval
+  // →..."). This is what the mobile card actually shows instead.
+  shortDescription: string;
   highlights: string[];
   techTags: string[]; // full display list, as written in profile.md's "Tech:" line
   githubUrl?: string;
@@ -80,6 +87,12 @@ export interface Certification {
   issuer: string;
   detail?: string; // e.g. score/percentile, verified from certificate PDF
   items?: string[]; // e.g. the individual courses making up a multi-course specialization
+  // Only set where profile.md actually documents a real public verify link
+  // (2 of the 9, both Coursera) — most of these certs have no public
+  // verify URL at all (Oracle's aren't public, NPTEL's are roll-number-
+  // based, Cisco/MongoDB don't publish one), so this stays undefined for
+  // the rest rather than linking to something that doesn't exist.
+  verifyUrl?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +188,7 @@ export const projects: Project[] = [
     period: "Aug 2025 – Nov 2025 (Updated May 2026)",
     description:
       "Full-stack AI recruitment platform — resume analysis for job seekers, hiring workflows for recruiters. Pipeline: query → dense + BM25 retrieval → reciprocal rank fusion → cross-encoder rerank → GitHub-corroborated, cited answer.",
+    shortDescription: "An AI platform that matches resumes to jobs — for job seekers and hiring teams alike.",
     highlights: [
       "Hybrid retrieval: dense + sparse (BM25) search, reciprocal rank fusion, cross-encoder reranking, citation-backed AI responses.",
       "Three-stage recruiter evaluation pipeline (dense prescreen → skill match → LLM review) — shortlists top ~5% of candidates, cutting full rubric reviews by ~95%.",
@@ -211,6 +225,7 @@ export const projects: Project[] = [
     period: "Nov 2025 – Jan 2026",
     description:
       "Agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus — order status, refund tracking, human escalation via MCP tools. Pipeline: query → intent routing → hybrid Qdrant retrieval → MCP tool fallback → 7-scanner LLM Guard → grounded answer.",
+    shortDescription: "An AI support agent that answers order and refund questions from a real FAQ corpus, escalating to a human when it can't.",
     highlights: [
       "Built on LlamaIndex: intent-routing planner, 5 integrated tools (FAQ search + 4 MCP tools), LiteLLM gateway with fallback across 3 models / 2 providers.",
       "LLM Guard guardrails (7 parallel scanners) cut latency from ~4.5s → ~1s.",
@@ -238,6 +253,7 @@ export const projects: Project[] = [
     period: "Jul 2026 – Aug 2026",
     description:
       "An AI pipeline that ingests recorded sales calls, transcribes and diarizes them, runs a 3-pass LLM analysis, computes a deterministic score, and surfaces it all through director/team-leader/advisor dashboards with a live contest-and-review workflow. Built at production-level care, not as a demo.",
+    shortDescription: "AI that transcribes and scores real sales calls, then surfaces the results on live team dashboards.",
     highlights: [
       "Director / Team Leader / Advisor dashboards with score-trend charts (4/8/12-week ranges).",
       "Filterable, paginated, URL-driven call log with shareable filtered views.",
@@ -289,6 +305,7 @@ export const projects: Project[] = [
     period: "Earlier work",
     description:
       "Scraped ICC Men's T20 World Cup 2024 data from ESPN Cricinfo, processed it with Pandas, and built a 7-page interactive Power BI dashboard.",
+    shortDescription: "T20 World Cup data, scraped and turned into a 7-page interactive dashboard.",
     highlights: [
       "Overall Tournament Analysis, Player Analysis (Openers, Middle Order, Finishers, All-Rounders, Bowlers), and a data-driven 'Final 11 (Best XI)' of the tournament.",
     ],
@@ -337,8 +354,8 @@ export const research: ResearchPaper[] = [
     year: "2025",
     oneLiner:
       "Co-authored a survey on methodologies for smart-pen-based automated data entry — examining handwriting recognition, pattern-recognition approaches, and techniques for converting handwritten input into structured digital information.",
-    sourceLabel: "IEEE proceedings TOC",
-    sourceUrl: "https://www.proceedings.com/content/082/082651webtoc.pdf",
+    sourceLabel: "IEEE Xplore",
+    sourceUrl: "https://ieeexplore.ieee.org/document/11209653",
   },
   {
     id: "aquaculture-pinns",
@@ -350,9 +367,8 @@ export const research: ResearchPaper[] = [
     year: "2025",
     oneLiner:
       "Co-authored a research paper on automated water-quality monitoring and prediction for sustainable aquaculture, using AI with Physics-Informed Neural Networks (PINNs) to move from reactive to predictive water-quality management.",
-    sourceLabel: "ResearchGate / DOI",
-    sourceUrl:
-      "https://www.researchgate.net/publication/403068370_Automated_Water_Quality_Monitoring_and_Prediction_System_Using_AI_and_PINNs_for_Sustainable_Aquaculture",
+    sourceLabel: "IEEE Xplore",
+    sourceUrl: "https://ieeexplore.ieee.org/document/11436713",
     doi: "10.1109/IConSCEPT66142.2025.11436713",
   },
 ];
@@ -398,6 +414,7 @@ export const certifications: Certification[] = [
       "Advanced Learning Algorithms",
       "Unsupervised Learning, Recommenders, Reinforcement Learning",
     ],
+    verifyUrl: "https://coursera.org/verify/specialization/TZJIJDLOYNF2",
   },
   {
     name: "Introduction to Internet of Things",
@@ -418,6 +435,7 @@ export const certifications: Certification[] = [
     name: "Google AI Essentials",
     issuer: "Coursera (Google Career Certificates)",
     detail: "Completed Aug 2024",
+    verifyUrl: "https://coursera.org/verify/7AGU8IHCBC8X",
   },
 ];
 

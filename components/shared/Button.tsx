@@ -13,8 +13,12 @@ import { useReducedMotion } from "motion/react";
 // level as the hero's background parallax — disabled on touch and reduced
 // motion, capped small enough that it reads as "responsive," not "flying."
 
+// Scaled down for mobile (was the same min-h-11/px-5/text-sm at every
+// size — a laptop-sized button sitting in an otherwise-shrunk mobile
+// layout reads as mismatched, not "the same design, smaller"). sm: and up
+// restore the exact original values, so laptop/desktop is untouched.
 const base =
-  "inline-flex min-h-11 items-center gap-2 rounded-md px-5 py-2.5 font-mono text-sm font-bold uppercase tracking-wide transition-colors duration-150";
+  "inline-flex min-h-9 items-center gap-1.5 rounded-md px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 sm:min-h-11 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm";
 
 const variants = {
   primary: "bg-foreground text-background hover:bg-accent-soft hover:text-background",

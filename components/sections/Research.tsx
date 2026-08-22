@@ -5,7 +5,7 @@ import { research } from "@/lib/content";
 
 export function Research() {
   return (
-    <section id="research" className="mx-auto max-w-6xl px-6 py-24">
+    <section id="research" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
       <SectionHeading
         index="06"
         label="PAPERS"
@@ -18,7 +18,7 @@ export function Research() {
         note="Co-authored, peer-reviewed work — not the main focus, but real."
       />
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
         {research.map((paper) => (
           <PaperCard key={paper.id} paper={paper} />
         ))}

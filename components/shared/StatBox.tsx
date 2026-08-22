@@ -31,7 +31,7 @@ export function StatBox({
     <Reveal
       y={16}
       delay={delay}
-      className={`rounded-md border p-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 active:-translate-y-1 ${
+      className={`rounded-md border p-2.5 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 active:-translate-y-1 sm:p-4 ${
         filled
           ? "border-accent bg-accent text-background hover:shadow-[0_10px_28px_-10px_rgba(62,207,142,0.55)] active:shadow-[0_10px_28px_-10px_rgba(62,207,142,0.55)]"
           : "border-surface-border hover:border-accent/60 hover:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)] active:border-accent/60 active:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)]"

@@ -30,7 +30,7 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
     // than a flat rectangle. Primary gets the fuller-strength version;
     // earlier gets a dimmer one so it still reads as visually secondary.
     <div
-      className={`rounded-md border bg-background p-6 sm:p-8 ${
+      className={`rounded-md border bg-background p-4 sm:p-6 md:p-8 ${
         isPrimary
           ? "border-accent/60 shadow-[6px_6px_0_0_rgba(62,207,142,0.35)]"
           : "border-surface-border shadow-[4px_4px_0_0_rgba(232,240,230,0.08)]"
@@ -39,8 +39,10 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <p className="font-mono text-xs text-muted">{data.period}</p>
-          <h3 className={`mt-1 uppercase text-foreground ${isPrimary ? "text-2xl" : "text-lg"}`}>{data.title}</h3>
-          <p className={isPrimary ? "text-muted" : "text-sm text-muted"}>
+          <h3 className={`mt-1 uppercase text-foreground ${isPrimary ? "text-lg sm:text-2xl" : "text-base sm:text-lg"}`}>
+            {data.title}
+          </h3>
+          <p className={`text-sm ${isPrimary ? "sm:text-base text-muted" : "text-muted"}`}>
             @ {data.company}
             {data.location ? ` · ${data.location}` : ""}
           </p>
@@ -50,15 +52,15 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
         </span>
       </div>
 
-      <ul className={`mt-5 space-y-3 border-l-2 pl-4 ${isPrimary ? "border-accent/50" : "border-surface-border"}`}>
+      <ul className={`mt-3 space-y-2 border-l-2 pl-4 sm:mt-5 sm:space-y-3 ${isPrimary ? "border-accent/50" : "border-surface-border"}`}>
         {data.bullets.map((bullet) => (
-          <li key={bullet} className={`text-pretty text-muted ${isPrimary ? "" : "text-sm"}`}>
+          <li key={bullet} className={`text-pretty text-sm text-muted ${isPrimary ? "sm:text-base" : ""}`}>
             {highlightNumbers(bullet)}
           </li>
         ))}
       </ul>
 
-      <div className="mt-5 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-5">
         {data.tags.map((tag) => (
           <TagChip key={tag} label={tag} />
         ))}

@@ -7,8 +7,8 @@ import type { OpenSourceContribution } from "@/lib/content";
 // PR description.
 export function DiffCard({ contribution }: { contribution: OpenSourceContribution }) {
   return (
-    <Reveal y={20} className="rounded-lg border border-surface-border bg-surface/50 p-6 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Reveal y={20} className="rounded-lg border border-surface-border bg-surface/50 p-4 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-2 font-mono text-sm text-foreground">
           <GitPullRequest size={16} className="text-accent" />
           {contribution.repo} {contribution.prNumber}
@@ -26,18 +26,18 @@ export function DiffCard({ contribution }: { contribution: OpenSourceContributio
         </a>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-md border border-amber/25 bg-amber/5 p-4">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
+        <div className="rounded-md border border-amber/25 bg-amber/5 p-3 sm:p-4">
           <p className="font-mono text-xs uppercase tracking-wide text-amber">Before</p>
-          <p className="mt-2 text-sm text-muted">{contribution.before}</p>
+          <p className="mt-1.5 text-sm text-muted sm:mt-2">{contribution.before}</p>
         </div>
-        <div className="rounded-md border border-success/25 bg-success/5 p-4">
+        <div className="rounded-md border border-success/25 bg-success/5 p-3 sm:p-4">
           <p className="font-mono text-xs uppercase tracking-wide text-success">After</p>
-          <p className="mt-2 text-sm text-muted">{contribution.after}</p>
+          <p className="mt-1.5 text-sm text-muted sm:mt-2">{contribution.after}</p>
         </div>
       </div>
 
-      <p className="mt-4 font-mono text-xs text-muted">
+      <p className="mt-3 font-mono text-xs text-muted sm:mt-4">
         {contribution.testsAdded} regression tests added · {contribution.totalPassing} tests passing
         {contribution.issueNumber ? ` · traces to issue ${contribution.issueNumber}` : ""}
       </p>

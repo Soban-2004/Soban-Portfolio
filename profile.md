@@ -221,7 +221,7 @@ Both papers below are now independently confirmed — bibliographic details veri
 **Authors:** M. Sivakumar, **Soban Shankar** (2nd author), K. S. Vishal, J. Richardson, D. Kavitha
 **Conference:** 2025 2nd International Conference on Computing and Data Science (ICCDS), IEEE Proceedings, pages 1–6 (proceedings page 688)
 **Affiliation:** Easwari Engineering College, Dept. of CSE
-**Sources:** [J-GLOBAL record](https://jglobal.jst.go.jp/en/public/202502257505682938) · [IEEE proceedings TOC](https://www.proceedings.com/content/082/082651webtoc.pdf)
+**Sources:** [J-GLOBAL record](https://jglobal.jst.go.jp/en/public/202502257505682938) · [IEEE Xplore](https://ieeexplore.ieee.org/document/11209653)
 
 **What it's about (portfolio-safe description):**
 A survey of methodologies for using smart/digital pen technology to automate data entry from handwriting — examining how pen-stroke capture, handwriting recognition, and field-mapping techniques can convert handwritten form input directly into structured digital data, without manual transcription.
@@ -238,7 +238,7 @@ A survey of methodologies for using smart/digital pen technology to automate dat
 **Authors:** C. Renil Immanuel, S. Kayalvizhi, **Soban Shankar** (3rd author)
 **Conference:** 2025 IConSCEPT (International Conference on Signal Processing, Computation, Electronics, Power and Telecommunication)
 **DOI:** `10.1109/IConSCEPT66142.2025.11436713`
-**Source:** [ResearchGate](https://www.researchgate.net/publication/403068370_Automated_Water_Quality_Monitoring_and_Prediction_System_Using_AI_and_PINNs_for_Sustainable_Aquaculture)
+**Source:** [IEEE Xplore](https://ieeexplore.ieee.org/document/11436713) · [ResearchGate](https://www.researchgate.net/publication/403068370_Automated_Water_Quality_Monitoring_and_Prediction_System_Using_AI_and_PINNs_for_Sustainable_Aquaculture)
 
 **What it's about (portfolio-safe description):**
 Uses AI combined with Physics-Informed Neural Networks (PINNs) to monitor and predict water-quality conditions in aquaculture (fish farming), moving from reactive monitoring (react after a problem occurs) to predictive monitoring (anticipate and intervene before conditions become harmful). PINNs differ from standard neural networks by incorporating known physical constraints into training, not just historical sensor data — producing predictions more consistent with how the real environmental system behaves.

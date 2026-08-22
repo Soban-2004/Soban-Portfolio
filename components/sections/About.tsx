@@ -5,7 +5,7 @@ import { about, education } from "@/lib/content";
 
 export function About() {
   return (
-    <section id="about" className="mx-auto max-w-6xl px-6 py-24">
+    <section id="about" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
       <SectionHeading
         index="01"
         label="INTRO"
@@ -16,7 +16,7 @@ export function About() {
           </>
         }
       />
-      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-8 sm:gap-6 md:grid-cols-[220px_1fr]">
         <p className="font-mono text-xs text-muted/60">bio.txt</p>
         {/* min-w-0: a grid item's default min-width is `auto`, sized to its
             widest descendant's intrinsic content — kept as a defensive
@@ -28,8 +28,12 @@ export function About() {
               copy here read as flat. This is the one paragraph on the site
               that gets the terminal's own phosphor-green tone as its actual
               body color, not just an accent on a heading/number, since it's
-              the intro paragraph readers land on first. */}
-          <p className="max-w-2xl text-pretty text-lg leading-relaxed text-accent-soft sm:text-xl">
+              the intro paragraph readers land on first.
+              text-sm/leading-snug on mobile only (sm: restores the original
+              text-lg/leading-relaxed) — at the original size this ~90-word
+              paragraph alone ran past a full phone screen before the
+              education card even started. */}
+          <p className="max-w-2xl text-pretty text-sm leading-snug text-accent-soft sm:text-xl sm:leading-relaxed">
             {about.paragraph}
           </p>
 
@@ -51,11 +55,11 @@ export function About() {
               through a couple of px of padding — this inner card has to be
               fully opaque or the gradient would also show through the
               middle of the card, not just at the edge. */}
-          <div className="edu-glow-border mt-10 max-w-md rounded-lg">
-            <div className="flex items-start gap-3 rounded-md bg-surface p-5 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0_0_var(--accent)] active:-translate-x-1 active:-translate-y-1 active:shadow-[4px_4px_0_0_var(--accent)]">
-              <GraduationCap size={20} className="mt-0.5 shrink-0 text-accent" />
+          <div className="edu-glow-border mt-4 max-w-md rounded-lg sm:mt-10">
+            <div className="flex items-start gap-2.5 rounded-md bg-surface p-3 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0_0_var(--accent)] active:-translate-x-1 active:-translate-y-1 active:shadow-[4px_4px_0_0_var(--accent)] sm:gap-3 sm:p-5">
+              <GraduationCap size={18} className="mt-0.5 shrink-0 text-accent sm:size-5" />
               <div>
-                <p className="font-medium text-foreground">{education.degree}</p>
+                <p className="text-sm font-medium text-foreground sm:text-base">{education.degree}</p>
                 <p className="mt-1 font-mono text-xs text-muted">
                   {education.school} · {education.period}
                 </p>

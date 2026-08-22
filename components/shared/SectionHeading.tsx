@@ -32,10 +32,10 @@ export function SectionHeading({
           natural break (when one's needed at all) lands at that
           prefix/suffix color boundary instead of splitting a word
           mid-character. */}
-      <h2 className="font-display-3d mt-4 break-words text-4xl uppercase leading-[1.2] text-foreground sm:text-5xl">
+      <h2 className="font-display-3d mt-3 break-words text-3xl uppercase leading-[1.2] text-foreground sm:mt-4 sm:text-5xl">
         {title}
       </h2>
-      {note && <p className="mt-4 max-w-xl text-muted">{note}</p>}
+      {note && <p className="mt-2 max-w-xl text-sm text-muted sm:mt-4 sm:text-base">{note}</p>}
     </Reveal>
   );
 }

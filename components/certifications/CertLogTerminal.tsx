@@ -11,6 +11,16 @@
 // credential data itself (slow and gimmicky for real content; the
 // typewriter treatment is reserved for the two short synthetic lines,
 // the command and the "fetching" status).
+//
+// Collapsing plays the exact same sequence back in reverse instead of
+// just snapping to the 5-row view: the extra rows disappear one at a
+// time (fastest first, since a real backspace held down accelerates),
+// then the "Fetching..." line erases character by character from the
+// end, then the "$ cert_log --all" echo itself erases the same way —
+// genuinely deleting, not fading — before the collapsed view (and the
+// --all button) reappears. That's the literal ask this reversed the
+// original design for: "animate like the cursor is pressed backspace
+// continually."
 
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
@@ -24,7 +34,9 @@ const COLLAPSE_TEXT = "$ cert_log --collapse";
 const FETCH_TEXT = "Fetching remaining credentials...";
 const TYPE_SPEED_COMMAND = 26; // ms/char — short line, reads as deliberate keystrokes
 const TYPE_SPEED_FETCH = 14; // ms/char — longer line, faster or the pause drags
+const BACKSPACE_SPEED_MS = 10; // ms/char — a held-down backspace auto-repeats faster than anyone actually types
 const ROW_STAGGER_MS = 130;
+const ROW_ERASE_STAGGER_MS = 90; // quicker than the reveal's stagger — clearing rows away reads best a little brisker than streaming them in
 
 // Both the "run this" and "undo this" commands share one visual treatment
 // — a real bordered/filled control, not plain inline text with a hover
@@ -33,17 +45,34 @@ const ROW_STAGGER_MS = 130;
 const CMD_BUTTON =
   "group mt-2 inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/5 px-2.5 py-1.5 text-foreground transition-colors duration-150 hover:border-accent hover:bg-accent/10 hover:text-accent active:border-accent active:bg-accent/10 active:text-accent";
 
-type Phase = "collapsed" | "typingCommand" | "typingFetch" | "streaming" | "done";
+type Phase =
+  | "collapsed"
+  | "typingCommand"
+  | "typingFetch"
+  | "streaming"
+  | "done"
+  // The reverse chain collapse() plays — same three steps as above, run
+  // backward: rows erase one at a time, then the fetch line backspaces
+  // to nothing, then the command echo backspaces to nothing, landing
+  // back on "collapsed".
+  | "streamingOut"
+  | "typingFetchOut"
+  | "typingCommandOut";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-// Minimal typewriter: reveals `text` one character at a time while
-// `active`, resets to empty when deactivated. `done` flips true exactly
-// once the full string is showing, which the phase state machine below
-// watches to advance to the next step.
-function useTypewriter(text: string, active: boolean, speed: number) {
+// Typewriter in either direction: "forward" reveals `text` one character
+// at a time from empty (the original behavior); "backward" starts at the
+// full string and erases it from the end, one character at a time — the
+// actual "held-down backspace" effect. `done` flips true exactly once
+// the animation reaches its end state (full text forward, empty text
+// backward), which the phase state machine below watches to advance.
+// Resets to a fresh starting point whenever deactivated so the next
+// activation — in either direction — always begins from the right place
+// rather than picking up mid-string.
+function useTypewriter(text: string, active: boolean, speed: number, direction: "forward" | "backward" = "forward") {
   const [out, setOut] = useState("");
   const [done, setDone] = useState(false);
 
@@ -53,17 +82,19 @@ function useTypewriter(text: string, active: boolean, speed: number) {
       setDone(false);
       return;
     }
-    let i = 0;
+    let i = direction === "forward" ? 0 : text.length;
+    setOut(text.slice(0, i)); // the true starting frame, shown immediately rather than waiting for the first tick
     const id = window.setInterval(() => {
-      i += 1;
+      i += direction === "forward" ? 1 : -1;
       setOut(text.slice(0, i));
-      if (i >= text.length) {
+      const finished = direction === "forward" ? i >= text.length : i <= 0;
+      if (finished) {
         window.clearInterval(id);
         setDone(true);
       }
     }, speed);
     return () => window.clearInterval(id);
-  }, [text, active, speed]);
+  }, [text, active, speed, direction]);
 
   return { out, done };
 }
@@ -126,8 +157,23 @@ export function CertLogTerminal() {
   const [streamedCount, setStreamedCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const cmdTyper = useTypewriter(COMMAND_TEXT, phase === "typingCommand", TYPE_SPEED_COMMAND);
-  const fetchTyper = useTypewriter(FETCH_TEXT, phase === "typingFetch", TYPE_SPEED_FETCH);
+  const cmdActive = phase === "typingCommand" || phase === "typingCommandOut";
+  const cmdDirection = phase === "typingCommandOut" ? "backward" : "forward";
+  const cmdTyper = useTypewriter(
+    COMMAND_TEXT,
+    cmdActive,
+    cmdDirection === "backward" ? BACKSPACE_SPEED_MS : TYPE_SPEED_COMMAND,
+    cmdDirection,
+  );
+
+  const fetchActive = phase === "typingFetch" || phase === "typingFetchOut";
+  const fetchDirection = phase === "typingFetchOut" ? "backward" : "forward";
+  const fetchTyper = useTypewriter(
+    FETCH_TEXT,
+    fetchActive,
+    fetchDirection === "backward" ? BACKSPACE_SPEED_MS : TYPE_SPEED_FETCH,
+    fetchDirection,
+  );
 
   const expand = () => {
     if (phase !== "collapsed") return;
@@ -143,13 +189,20 @@ export function CertLogTerminal() {
     setPhase("typingCommand");
   };
 
-  // The reverse of expand(): back to the 5-row view, no re-play of the
-  // reveal sequence on the way down — that sequence is there to sell
-  // "fetching more," which doesn't apply to going back to fewer.
+  // The reverse of expand() — same three-step sequence, played backward
+  // (see the phase chain effects below): erase the streamed rows, then
+  // backspace the fetch line, then backspace the command echo, landing
+  // back on "collapsed". streamedCount is already sitting at `remaining`
+  // from being in "done", so streamingOut's own effect can start
+  // decrementing it immediately without this needing to touch it first.
   const collapse = () => {
     if (phase !== "done") return;
-    setStreamedCount(0);
-    setPhase("collapsed");
+    if (prefersReducedMotion) {
+      setStreamedCount(0);
+      setPhase("collapsed");
+      return;
+    }
+    setPhase("streamingOut");
   };
 
   // Phase chain: command types out -> brief pause -> "fetching" types
@@ -179,6 +232,31 @@ export function CertLogTerminal() {
     return () => window.clearTimeout(t);
   }, [phase, streamedCount, remaining]);
 
+  // Reverse chain, mirroring the three effects above: erase rows one at
+  // a time -> backspace the fetch line -> backspace the command echo ->
+  // back to "collapsed".
+  useEffect(() => {
+    if (phase !== "streamingOut") return;
+    if (streamedCount <= 0) {
+      const t = window.setTimeout(() => setPhase("typingFetchOut"), 150);
+      return () => window.clearTimeout(t);
+    }
+    const t = window.setTimeout(() => setStreamedCount((c) => c - 1), ROW_ERASE_STAGGER_MS);
+    return () => window.clearTimeout(t);
+  }, [phase, streamedCount]);
+
+  useEffect(() => {
+    if (phase !== "typingFetchOut" || !fetchTyper.done) return;
+    const t = window.setTimeout(() => setPhase("typingCommandOut"), 150);
+    return () => window.clearTimeout(t);
+  }, [phase, fetchTyper.done]);
+
+  useEffect(() => {
+    if (phase !== "typingCommandOut" || !cmdTyper.done) return;
+    const t = window.setTimeout(() => setPhase("collapsed"), 100);
+    return () => window.clearTimeout(t);
+  }, [phase, cmdTyper.done]);
+
   // Auto-scroll to the latest output while the sequence is actively
   // producing new lines — a real terminal keeps new output in view. Does
   // NOT exclude the transition into "done": that final render is what
@@ -198,15 +276,30 @@ export function CertLogTerminal() {
 
   return (
     <TerminalPanel title="cert_log --list">
-      {/* max-h + its own scroll: the whole point of streaming certs into
-          a terminal is that the terminal handles overflow the way a real
-          one does — scrolling in place — rather than the page growing
-          taller with every credential added in the future. Comfortably
-          fits the 5-row collapsed state with room to spare; only the
-          expanded state (9+ rows, growing over time) actually needs the
-          scroll. terminal-scroll: a thin, low-contrast scrollbar defined
-          in globals.css instead of each browser's default chrome one. */}
-      <div ref={scrollRef} className="terminal-scroll max-h-[400px] overflow-y-auto font-mono text-xs sm:max-h-[460px]">
+      {/* No max-height/scroll at all while collapsed — the 5-row view is
+          meant to just sit there fully visible, not hint at a scrollbar
+          that has nothing to actually scroll. The whole point of streaming
+          certs into a terminal is that the terminal handles overflow the
+          way a real one does — scrolling in place — rather than the page
+          growing taller with every credential added in the future, but
+          that only becomes true once there's real overflow to handle: the
+          moment expand() fires, this switches on the cap + scroll (9+ rows,
+          growing over time). terminal-scroll: a blocky green "pixel"
+          scrollbar defined in globals.css, standing in for each browser's
+          default chrome one — only actually renders once overflow-y-auto
+          is present below, so it's harmless to keep on the className
+          unconditionally. overflow-x-hidden is deliberate, not redundant:
+          per the CSS overflow spec, setting only overflow-y to a non-
+          "visible" value silently computes overflow-x as "auto" too (an
+          axis can't stay "visible" once the other one isn't) — so without
+          this, a single-pixel sub-pixel rounding overflow was enough to
+          pop a horizontal scrollbar under the vertical one. */}
+      <div
+        ref={scrollRef}
+        className={`terminal-scroll font-mono text-xs ${
+          phase === "collapsed" ? "" : "max-h-[400px] overflow-x-hidden overflow-y-auto sm:max-h-[460px]"
+        }`}
+      >
         <p className="text-foreground">$ cat credentials.log</p>
 
         <div className="my-3 border-t border-surface-border" aria-hidden="true" />
@@ -230,18 +323,22 @@ export function CertLogTerminal() {
         {phase !== "collapsed" && (
           <div>
             <p className="text-foreground">
-              {phase === "typingCommand" ? cmdTyper.out : COMMAND_TEXT}
-              {phase === "typingCommand" && <span className="cert-log-cursor text-accent">▌</span>}
+              {cmdActive ? cmdTyper.out : COMMAND_TEXT}
+              {cmdActive && <span className="cert-log-cursor text-accent">▌</span>}
             </p>
 
-            {(phase === "typingFetch" || phase === "streaming" || phase === "done") && (
+            {(phase === "typingFetch" ||
+              phase === "streaming" ||
+              phase === "done" ||
+              phase === "streamingOut" ||
+              phase === "typingFetchOut") && (
               <p className="mt-2 text-muted">
-                {phase === "typingFetch" ? fetchTyper.out : FETCH_TEXT}
-                {phase === "typingFetch" && <span className="cert-log-cursor text-accent">▌</span>}
+                {fetchActive ? fetchTyper.out : FETCH_TEXT}
+                {fetchActive && <span className="cert-log-cursor text-accent">▌</span>}
               </p>
             )}
 
-            {(phase === "streaming" || phase === "done") && (
+            {(phase === "streaming" || phase === "streamingOut" || phase === "done") && (
               <div className="mt-2">
                 {rest.slice(0, phase === "done" ? rest.length : streamedCount).map((cert, i) => (
                   <div key={cert.name} className="cert-row-stream-in">

@@ -19,7 +19,7 @@
 // animation with a per-cell stagger delay (see .matrix-unlock-cell in
 // globals.css); no canvas, no per-frame JS.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { identity, projects, openSource, research, experience } from "@/lib/content";
 import { BOOT_SESSION_KEY, BOOT_UNLOCK_EVENT } from "@/lib/bootSignal";
 
@@ -30,26 +30,39 @@ const LINE_DELAY_MS = 380;
 const HOLD_MS = 500;
 const PANEL_FADE_MS = 280;
 
-// The unlock grid: fixed column/row counts (not tied to actual viewport
-// pixel size like the ambient background's 40px cells) — chunky, deliberate
-// pixel-block tiles rather than a literal continuation of that finer grid,
-// which reads better at this size and keeps the DOM to a flat 60 divs
-// regardless of screen size. wave = col + row is each cell's distance from
-// the top-left corner along the diagonal, so staggering by wave is what
-// produces the top-left → bottom-right cascade rather than a row-by-row or
-// random reveal.
-const GRID_COLS = 10;
-const GRID_ROWS = 6;
+// The unlock grid: a target CELL COUNT (not a fixed column/row pair) —
+// chunky, deliberate pixel-block tiles rather than a literal continuation
+// of the ambient background's finer 40px grid, which reads better at this
+// size. Column/row counts are derived per-viewport (see gridForViewport
+// below) so cells stay roughly SQUARE on any aspect ratio: a fixed
+// 10-columns-by-6-rows grid stretched to a real phone's tall, narrow
+// viewport (e.g. 390×844) produced ~39px-wide by ~140px-tall cells —
+// visibly rectangular, not the square pixel-block look this is going for.
+// Solving cols/rows from the viewport's own aspect ratio while keeping
+// roughly this many total cells is what makes them square again at any
+// screen size, portrait or landscape, without hand-picking breakpoints.
+const TARGET_CELL_COUNT = 60; // 10×6 at a typical laptop's ~16:9-ish aspect
+const DEFAULT_GRID = { cols: 10, rows: 6 }; // matches TARGET_CELL_COUNT — also this component's
+// SSR / very-first-client-paint render, before the real viewport is known
+// (see the mount effect below); must stay in sync with TARGET_CELL_COUNT's
+// own implied 16:9-ish default or the post-mount swap would visibly jump.
 const WAVE_DELAY_MS = 35;
 const CELL_DURATION_MS = 380;
-const MAX_WAVE = GRID_COLS - 1 + (GRID_ROWS - 1);
-const UNLOCK_TOTAL_MS = MAX_WAVE * WAVE_DELAY_MS + CELL_DURATION_MS;
 
-const GRID_CELLS = Array.from({ length: GRID_COLS * GRID_ROWS }, (_, i) => {
-  const col = i % GRID_COLS;
-  const row = Math.floor(i / GRID_COLS);
-  return { col, row, wave: col + row };
-});
+function gridForViewport(width: number, height: number) {
+  const aspect = height / width;
+  const cols = Math.max(4, Math.round(Math.sqrt(TARGET_CELL_COUNT / aspect)));
+  const rows = Math.max(4, Math.round(cols * aspect));
+  return { cols, rows };
+}
+
+function buildCells(cols: number, rows: number) {
+  return Array.from({ length: cols * rows }, (_, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    return { col, row, wave: col + row };
+  });
+}
 
 export function LoadingScreen() {
   const [visible, setVisible] = useState(true);
@@ -68,6 +81,17 @@ export function LoadingScreen() {
   // persists across the double-invoke, same component instance) means the
   // sessionStorage read only ever happens once.
   const decisionRef = useRef<"skip" | "reduced" | "run" | null>(null);
+  // Starts at DEFAULT_GRID (same value on the server render and the
+  // client's very first paint, before hydration — anything read from
+  // `window` has to wait for an effect, same reasoning as decisionRef's
+  // own matchMedia read above) and gets replaced with the real viewport-
+  // derived value the instant this mounts, inside the same effect that
+  // schedules the rest of the boot sequence — before `unlocking` ever
+  // flips true, every cell is still just a plain solid bg-background
+  // square regardless of how many of them there are, so swapping the grid
+  // dimensions out from under the boot panel here is never visible.
+  const [grid, setGrid] = useState(DEFAULT_GRID);
+  const gridCells = useMemo(() => buildCells(grid.cols, grid.rows), [grid]);
 
   const shippedCount = projects.filter((p) => p.featured).length;
   const slug = identity.name.toLowerCase().replace(/\s+/g, "-");
@@ -81,6 +105,19 @@ export function LoadingScreen() {
   ];
 
   useEffect(() => {
+    // Computed fresh from the real viewport on every mount rather than
+    // trusting DEFAULT_GRID past this point — a real phone (tall, narrow)
+    // needs noticeably more rows than DEFAULT_GRID's laptop-shaped 10×6 to
+    // keep cells square; this is what actually fixes that. Kept local
+    // (not state-derived) for the UNLOCK_TOTAL_MS calc just below, since
+    // reading `grid` state here would still be last render's stale value —
+    // React hasn't applied the setGrid call yet at this point in the same
+    // effect.
+    const liveGrid = gridForViewport(window.innerWidth, window.innerHeight);
+    setGrid(liveGrid);
+    const maxWave = liveGrid.cols - 1 + (liveGrid.rows - 1);
+    const unlockTotalMs = maxWave * WAVE_DELAY_MS + CELL_DURATION_MS;
+
     if (decisionRef.current === null) {
       if (sessionStorage.getItem(BOOT_SESSION_KEY)) {
         decisionRef.current = "skip";
@@ -137,7 +174,7 @@ export function LoadingScreen() {
                     // finished means Hero's reveal now plays out clearly
                     // as its own, visible second beat.
                     window.dispatchEvent(new Event(BOOT_UNLOCK_EVENT));
-                  }, UNLOCK_TOTAL_MS),
+                  }, unlockTotalMs),
                 );
               }, PANEL_FADE_MS),
             );
@@ -164,13 +201,16 @@ export function LoadingScreen() {
           bg-background square (visually identical to a single solid
           backdrop, matching the boot panel's background), so there's no
           visual difference from the old plain-fade version until the
-          wipe actually starts. */}
+          wipe actually starts. cols/rows come from `grid` state (see
+          gridForViewport above) rather than fixed constants, so cells stay
+          square on a tall phone viewport instead of stretching into
+          rectangles. */}
       <div
         aria-hidden="true"
         className="absolute inset-0 grid"
-        style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}
+        style={{ gridTemplateColumns: `repeat(${grid.cols}, 1fr)`, gridTemplateRows: `repeat(${grid.rows}, 1fr)` }}
       >
-        {GRID_CELLS.map(({ col, row, wave }) => (
+        {gridCells.map(({ col, row, wave }) => (
           <div
             key={`${col}-${row}`}
             className={`border border-surface-border/40 ${unlocking ? "matrix-unlock-cell" : "bg-background"}`}
@@ -188,10 +228,19 @@ export function LoadingScreen() {
         <div className="w-full max-w-md">
           <div className="overflow-hidden rounded-lg border border-surface-border bg-surface/60">
             <div className="flex items-center gap-3 border-b border-surface-border px-3 py-2">
+              {/* Red/yellow/green via critical/amber/accent — the same
+                  triad TerminalPanel and SystemLog use, so this boot
+                  panel's window chrome matches every other terminal-style
+                  header on the site instead of its own slightly different
+                  palette (it was amber/success/accent — no red, and
+                  `success` is actually a cyan/blue token despite the name).
+                  Full-strength fill (not the old /60 translucent one) for
+                  an actually bright dot — a glow was tried on top of this
+                  and explicitly not wanted, just the plain saturated color. */}
               <div className="flex gap-1.5" aria-hidden="true">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-accent/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-critical" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber" />
+                <span className="h-2.5 w-2.5 rounded-full bg-accent" />
               </div>
               <span className="font-mono text-xs text-muted">boot.sh</span>
             </div>

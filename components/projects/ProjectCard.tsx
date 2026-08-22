@@ -66,6 +66,7 @@ export function ProjectCard({
   terminalLines,
   className = "",
   skipReveal = false,
+  onCaseStudyNavigate,
 }: {
   project: Project;
   category: string;
@@ -81,6 +82,14 @@ export function ProjectCard({
   // is gone now that only one card is ever in the DOM at a time, so this
   // is purely about which component owns the entrance animation.
   skipReveal?: boolean;
+  // Optional — when the carousel provides this, VIEW_CASE_STUDY plays a
+  // brief "$ cd /work/..." terminal flash before the route actually
+  // changes instead of navigating instantly, so moving from the carousel
+  // into a case study reads as one continuous system rather than two
+  // pages that happen to share a theme. Falls back to a plain Next Link
+  // (immediate navigation) when this isn't supplied, so the card still
+  // works correctly in any other context.
+  onCaseStudyNavigate?: (href: string, projectName: string) => void;
 }) {
   const isFlagship = variant === "flagship";
   const linkHref = project.caseStudyRoute ?? project.githubUrl ?? "#";
@@ -123,13 +132,14 @@ export function ProjectCard({
   // min-h: the carousel shows one card at a time now, so a visitor never
   // sees two side by side, but flipping between them still visibly
   // resized the card each time — min-h pins every card to whichever one
-  // is naturally tallest (Cricket Analysis at desktop, once its
-  // screenshot got sized up to actually use the space; FitNova at
-  // mobile), measured at each breakpoint down to a 320px phone, so
-  // navigating reads as "the same card, new content" instead of the
-  // frame itself changing size. min-height, not a hard height: a card
-  // whose description is expanded via Read More can still grow taller
-  // than this floor instead of clipping.
+  // is naturally tallest at a given breakpoint (FitNova at desktop —
+  // its longer copy plus a 2-line title edges out Cricket Analysis once
+  // the description dropped to a 3-line clamp below; FitNova at mobile
+  // too), re-measured after every height/sizing pass rather than reusing
+  // a stale number, so navigating reads as "the same card, new content"
+  // instead of the frame itself changing size. min-height, not a hard
+  // height: a card whose description is expanded via Read More can still
+  // grow taller than this floor instead of clipping.
   // zoom:0.7 at sm+ (desktop): requested as "reduce the card to 70% — it
   // doesn't need to cover the whole page." Every px length ON this
   // element (padding, font sizes, the min-h above, the image slot) gets
@@ -148,7 +158,7 @@ export function ProjectCard({
   // footprint reserved and just paint a shrunken image of itself inside
   // dead space. Left off below sm — the mobile card is already purpose-
   // sized, not scaled down from desktop.
-  const cardClassName = `scroll-mt-24 flex min-h-[365px] flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:min-h-[605px] sm:p-6 sm:[zoom:0.7] ${className}`;
+  const cardClassName = `scroll-mt-24 flex min-h-[365px] flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:min-h-[518px] sm:p-5 sm:[zoom:0.7] ${className}`;
 
   const content = (
     <>
@@ -169,7 +179,7 @@ export function ProjectCard({
           Dropped one step for the base (<sm, real phones) only; sm:text-4xl
           is untouched so tablet/laptop/desktop render exactly as before. */}
       <h3
-        className={`mt-2 line-clamp-2 shrink-0 text-2xl uppercase leading-tight sm:mt-3 sm:text-4xl ${isFlagship ? "text-background" : "text-foreground"}`}
+        className={`mt-2 line-clamp-2 shrink-0 text-2xl uppercase leading-tight sm:mt-2 sm:text-4xl ${isFlagship ? "text-background" : "text-foreground"}`}
       >
         {project.name}
       </h3>
@@ -189,7 +199,7 @@ export function ProjectCard({
       <p
         ref={descRef}
         className={`mt-1.5 hidden shrink-0 max-w-2xl text-pretty text-sm sm:mt-2 sm:block ${
-          expanded ? "" : "sm:line-clamp-4 sm:min-h-[5rem]"
+          expanded ? "" : "sm:line-clamp-3 sm:min-h-[3.75rem]"
         } ${mutedText}`}
       >
         {project.description}
@@ -218,8 +228,8 @@ export function ProjectCard({
           of empty card space once every card got pinned to the same
           min-height. terminalLines/stat-grid cards are untouched. */}
       <div
-        className={`mt-3 flex shrink-0 items-center justify-center overflow-hidden sm:mt-4 ${
-          project.screenshot ? "h-40 max-w-xl sm:h-64" : "h-28 max-w-md sm:h-40"
+        className={`mt-3 flex shrink-0 items-center justify-center overflow-hidden sm:mt-3 ${
+          project.screenshot ? "h-40 max-w-xl sm:h-48" : "h-28 max-w-md sm:h-40"
         }`}
       >
         {project.screenshot ? (
@@ -278,10 +288,20 @@ export function ProjectCard({
         )}
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 sm:gap-x-5 sm:pt-5">
+      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 sm:gap-x-5 sm:pt-4">
         {isInternal ? (
           <Link
             href={linkHref}
+            onClick={(e) => {
+              if (!onCaseStudyNavigate) return;
+              // Only intercept a plain left-click — a modifier click
+              // (open in new tab/window) or middle-click needs the real
+              // navigation to fire normally, not get swallowed by a
+              // same-tab transition it isn't going to use.
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              onCaseStudyNavigate(linkHref, project.name);
+            }}
             className={`underline-hover inline-flex min-h-9 items-center gap-1.5 font-mono text-xs font-medium sm:min-h-11 sm:text-sm ${isFlagship ? "text-background" : "text-accent"}`}
           >
             VIEW_CASE_STUDY <ArrowUpRight size={12} className="sm:size-3.5" />

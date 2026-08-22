@@ -561,22 +561,42 @@ main {
   animation: cert-row-stream-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* CertLogTerminal's scrollbar (only ever mounted with overflow-y-auto
+   once expanded — see the comment there) — a chunky green "pixel" bar
+   instead of a generic thin gray one, square-cornered rather than pill-
+   shaped and built from a stepped block pattern rather than a flat fill,
+   to actually read as pixel art rather than just "a green scrollbar".
+   scrollbar-width/scrollbar-color is Firefox's whole API (no thumb
+   texturing or square-corner control there); the ::-webkit- rules are
+   what render the blocky segments in Chrome/Safari/Edge. */
 .terminal-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(232, 240, 230, 0.18) transparent;
+  scrollbar-color: var(--accent) rgba(62, 207, 142, 0.08);
 }
 .terminal-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
 }
 .terminal-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(62, 207, 142, 0.08);
+  border-left: 1px solid var(--surface-border);
 }
 .terminal-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(232, 240, 230, 0.18);
-  border-radius: 9999px;
+  background-color: var(--accent);
+  /* The "pixel" texture itself: a repeating stack of solid blocks cut by
+     thin background-colored gaps, so the thumb reads as a column of LED
+     segments rather than one continuous bar. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--background) 0px,
+    var(--background) 2px,
+    transparent 2px,
+    transparent 7px
+  );
+  border: 1px solid var(--background);
+  border-radius: 0;
 }
 .terminal-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(232, 240, 230, 0.3);
+  background-color: var(--accent-soft);
 }
 
 /* Mobile nav (Nav.tsx) — the hamburger's 3 bars morph into an X via plain
@@ -615,27 +635,54 @@ main {
   animation: nav-grid-pulse 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Hero SystemLog's "STATUS: OPEN_TO_WORK" value — a slow breathing glow
-   (text-shadow intensity, not opacity) so the one line that's actually a
-   live status reads as a live status, not just another static log row.
-   2.4s: brisker than glow-pulse's 6s background breathe (that one's
-   ambient/peripheral; this is a small piece of text someone's meant to
-   actually read, so too slow reads as inert rather than "alive") but
-   still calm, not an alert blink. No reduced-motion override needed —
-   the global safety net below already freezes this at a single frame. */
-@keyframes status-glow-pulse {
+/* Hero SystemLog's "STATUS: OPEN_TO_WORK" — a neon sign, not a status
+   badge with a glow on it: real motel/billboard neon doesn't just sit
+   there lit, it *flips* between lit and unlit (or between outline-only
+   and fully filled) on a cycle, which is what actually reads as "sign,"
+   not "text with a shadow." This alternates the badge between outline
+   (green text, transparent fill) and inverted-solid (dark text on a
+   filled green tube) — same accent green throughout, no amber/second
+   color, per feedback on the first two passes here (a breathing
+   text-shadow, then an amber badge + dot + letter-sweep — both replaced
+   outright, not layered under this). Flat color-invert only now, no
+   box-shadow glow either — also dropped per feedback, not just never
+   added. */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15em 0.6em;
+  border-radius: 9999px;
+  border: 1px solid rgba(62, 207, 142, 0.65);
+  color: var(--accent);
+  background-color: transparent;
+  animation: status-neon-flash 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes status-neon-flash {
   0%,
-  100% {
-    text-shadow: 0 0 4px rgba(62, 207, 142, 0.35);
+  38% {
+    background-color: transparent;
+    color: var(--accent);
   }
-  50% {
-    text-shadow:
-      0 0 10px rgba(62, 207, 142, 0.85),
-      0 0 18px rgba(62, 207, 142, 0.35);
+  50%,
+  88% {
+    background-color: var(--accent);
+    color: var(--background);
+  }
+  100% {
+    background-color: transparent;
+    color: var(--accent);
   }
 }
-.status-glow {
-  animation: status-glow-pulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+/* Explicit override, not left to the global safety net below: that net
+   freezes at whatever frame the animation happened to be on, which could
+   land on the inverted-fill state — a fine STATE, just not the one this
+   should settle on when nothing's supposed to be moving. */
+@media (prefers-reduced-motion: reduce) {
+  .status-badge {
+    animation: none;
+    background-color: transparent;
+    color: var(--accent);
+  }
 }
 
 /* Global safety net: any animation not already gated per-component collapses

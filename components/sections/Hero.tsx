@@ -113,9 +113,29 @@ export function Hero() {
             including the buttons/social row, lands inside one mobile
             viewport instead of needing a scroll to reach them. */}
         <h1 className="mt-3 max-w-4xl text-balance leading-[1.15] text-foreground sm:mt-5">
-          {/* text-4xl (was text-3xl): a size bump specifically requested
-              for mobile — sm: and up are untouched. */}
-          <span className="font-display-3d block text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+          {/* Third "make it a little bigger on mobile" round (was text-3xl,
+              then text-4xl, then plain text-5xl matching sm:'s own value).
+              Bumping the base Tailwind step again would either overshoot
+              past sm:'s 3rem before 640px (a literal shrink right at the
+              breakpoint) or require dragging sm:/md:/lg: up in lockstep —
+              this site's own fluid --text-5xl token only carries the site-
+              wide default low end (1.625rem @375px) up to that same 3rem
+              @640px ceiling. So this is a one-off arbitrary clamp() scoped
+              to just this span, not a swap to a bigger token step or an
+              edit to the shared --text-5xl variable (that variable also
+              backs SectionHeading's eyebrow, which was never asked to grow)
+              — same 640px-viewport ceiling (3rem, still exactly matching
+              sm:text-5xl below, so nothing jumps at that boundary), just a
+              taller floor at the small end (1.875rem @375px, was 1.625rem).
+              sm:/md:/lg: are otherwise untouched, so tablet-and-up still
+              steps up from there exactly as before. leading-[1.35] (was
+              inheriting the h1's tight 1.15): fine for a single line, but
+              "Soban Shankar" wraps to two at this size on any narrower
+              viewport, and 1.15 read as the two lines almost touching —
+              this is scoped to just the name span, not the h1 itself, so
+              the smaller headline text underneath keeps its own normal
+              spacing. */}
+          <span className="font-display-3d block text-[clamp(1.875rem,calc(0.283rem+6.7925vw),3rem)] leading-[1.35] sm:text-5xl md:text-6xl lg:text-7xl">
             {identity.name}
           </span>
           <span className="mt-2 block font-sans text-base font-normal normal-case tracking-normal text-muted sm:mt-4 sm:text-xl md:text-2xl">

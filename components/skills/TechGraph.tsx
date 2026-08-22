@@ -162,15 +162,37 @@ export function TechGraph() {
             {relatedProjects.length > 0 ? (
               <div className="flex flex-col gap-1.5">
                 <span className="font-mono text-[10px] uppercase tracking-wide text-muted">Used in</span>
-                {relatedProjects.map((p) => (
-                  <a
-                    key={p.id}
-                    href={`#${p.id}`}
-                    className="rounded-md bg-accent/15 px-2.5 py-1 font-mono text-xs text-accent-soft transition-colors duration-150 hover:bg-accent/25"
-                  >
-                    {p.name}
-                  </a>
-                ))}
+                {/* A small circuit-trace connector, not just a plain list —
+                    this node really does connect to these projects (it's
+                    the same relatedProjectIds data the "Used in" links
+                    themselves use), so a trunk line branching out to each
+                    one visualizes that relationship instead of just
+                    asserting it in a label. The trunk draws downward
+                    (scaleY, transform-origin: top) and each branch/chip
+                    fades in with a slight rightward settle, staggered —
+                    quick (given the whole popover only exists for a hover),
+                    not a moment to slow down for. */}
+                <div className="relative flex flex-col gap-1.5 pl-3">
+                  <motion.span
+                    aria-hidden="true"
+                    className="absolute bottom-1 left-0 top-1 w-px origin-top bg-accent/50"
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ duration: 0.24, ease: "easeOut" }}
+                  />
+                  {relatedProjects.map((p, i) => (
+                    <motion.a
+                      key={p.id}
+                      href={`#${p.id}`}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.06, duration: 0.18 }}
+                      className="relative rounded-md bg-accent/15 px-2.5 py-1 font-mono text-xs text-accent-soft transition-colors duration-150 before:absolute before:-left-3 before:top-1/2 before:h-px before:w-3 before:bg-accent/50 hover:bg-accent/25"
+                    >
+                      {p.name}
+                    </motion.a>
+                  ))}
+                </div>
               </div>
             ) : (
               <span className="font-mono text-xs text-muted">

@@ -3,6 +3,7 @@ import { GitHubIcon, LinkedInIcon } from "@/components/shared/BrandIcons";
 import { CropMarks } from "@/components/shared/CropMarks";
 import { Accent } from "@/components/shared/Accent";
 import { Button } from "@/components/shared/Button";
+import { CopyButton } from "@/components/shared/CopyButton";
 import { TerminalPanel } from "@/components/shared/TerminalPanel";
 import { identity, projects, openSource } from "@/lib/content";
 
@@ -55,13 +56,15 @@ export function Contact() {
               Contact:{" "}
               <a href={`mailto:${identity.email}`} className="underline-hover text-accent-soft">
                 {identity.email}
-              </a>
+              </a>{" "}
+              <CopyButton value={identity.email} label="email address" />
             </p>
             <p className="mt-1 font-mono text-xs text-muted">
               Phone:{" "}
               <a href={`tel:${identity.phone.replace(/\s+/g, "")}`} className="underline-hover text-accent-soft">
                 {identity.phone}
-              </a>
+              </a>{" "}
+              <CopyButton value={identity.phone} label="phone number" />
             </p>
             <p className="mt-1.5 font-mono text-xs text-muted/60 sm:mt-2">
               <span className="text-accent">_</span> Awaiting your message...

@@ -309,7 +309,13 @@ export const projects: Project[] = [
     highlights: [
       "Overall Tournament Analysis, Player Analysis (Openers, Middle Order, Finishers, All-Rounders, Bowlers), and a data-driven 'Final 11 (Best XI)' of the tournament.",
     ],
-    techTags: ["Python", "Pandas", "BeautifulSoup", "Power BI"],
+    // Power BI moved into the first 3 (what the card's own chip row
+    // shows, ProjectCard.tsx's techTags.slice(0, 3)) — it's the actual
+    // deliverable (the 7-page dashboard the screenshot shows), arguably
+    // more representative of this project at a glance than BeautifulSoup,
+    // which stays in the full list for the case-study page's own tech
+    // stack line and the "N Technologies" count.
+    techTags: ["Python", "Pandas", "Power BI", "BeautifulSoup"],
     githubUrl: "https://github.com/Soban-2004/ICC-Mens-T20-Cricket-World-Cup-2024-Data-Analysis",
     headlineStat: { label: "Dashboard pages", value: "7" },
     featured: false,

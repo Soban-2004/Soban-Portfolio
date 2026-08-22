@@ -32,8 +32,12 @@ export function SystemLog() {
             <span className="text-accent">[OK]</span> {line}
           </p>
         ))}
+        {/* Matches the same "Open_to_Work" status label Stats.tsx's own
+            Current Status block already uses — this line said
+            OPEN_TO_RELOCATION, a different (also true, just narrower)
+            fact than the one the rest of the site leads with. */}
         <p className="font-mono text-xs text-accent-soft">
-          STATUS: <span className="text-foreground">OPEN_TO_RELOCATION</span>
+          STATUS: <span className="status-glow text-foreground">OPEN_TO_WORK</span>
         </p>
       </div>
     </div>

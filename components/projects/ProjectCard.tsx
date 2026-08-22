@@ -120,7 +120,35 @@ export function ProjectCard({
   // defined in globals.css (0.75rem) but never actually wired to a card
   // anywhere — the softer corner was the original intent, this just
   // catches the card up to it.
-  const cardClassName = `scroll-mt-24 flex flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:p-6 ${className}`;
+  // min-h: the carousel shows one card at a time now, so a visitor never
+  // sees two side by side, but flipping between them still visibly
+  // resized the card each time — min-h pins every card to whichever one
+  // is naturally tallest (Cricket Analysis at desktop, once its
+  // screenshot got sized up to actually use the space; FitNova at
+  // mobile), measured at each breakpoint down to a 320px phone, so
+  // navigating reads as "the same card, new content" instead of the
+  // frame itself changing size. min-height, not a hard height: a card
+  // whose description is expanded via Read More can still grow taller
+  // than this floor instead of clipping.
+  // zoom:0.7 at sm+ (desktop): requested as "reduce the card to 70% — it
+  // doesn't need to cover the whole page." Every px length ON this
+  // element (padding, font sizes, the min-h above, the image slot) gets
+  // computed at 70%, so the content reads as a genuinely smaller version
+  // of the same card. The FOOTPRINT's other axis — width, which was
+  // stretching to fill the carousel wrapper via that wrapper's flex-1 —
+  // is handled one level up, on the (unzoomed) wrapping motion.div in
+  // ProjectsSlider.tsx, deliberately NOT here: a percentage width and
+  // zoom on the *same* element interact in a genuinely unintuitive way
+  // (the percentage ends up resolving against an already zoom-adjusted
+  // reference, which cancels most of the intended shrink right back out
+  // — confirmed empirically, not a guess), so the two need to live on
+  // different elements to both actually take effect. transform:scale(0.7)
+  // was the other obvious tool and would have avoided that interaction,
+  // but it doesn't reflow at all — the card would keep its full original
+  // footprint reserved and just paint a shrunken image of itself inside
+  // dead space. Left off below sm — the mobile card is already purpose-
+  // sized, not scaled down from desktop.
+  const cardClassName = `scroll-mt-24 flex min-h-[365px] flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:min-h-[605px] sm:p-6 sm:[zoom:0.7] ${className}`;
 
   const content = (
     <>
@@ -183,9 +211,36 @@ export function ProjectCard({
         </button>
       )}
 
-      <div className="mt-3 flex h-28 shrink-0 max-w-md items-center justify-center overflow-hidden sm:mt-4 sm:h-40">
+      {/* Taller + wider slot specifically when there's a real screenshot
+          to show (currently just Cricket Analysis) — the shared h-28/h-40
+          cap the other two content types (terminal panel, stat grid) use
+          was leaving a real dashboard screenshot small and boxed in a lot
+          of empty card space once every card got pinned to the same
+          min-height. terminalLines/stat-grid cards are untouched. */}
+      <div
+        className={`mt-3 flex shrink-0 items-center justify-center overflow-hidden sm:mt-4 ${
+          project.screenshot ? "h-40 max-w-xl sm:h-64" : "h-28 max-w-md sm:h-40"
+        }`}
+      >
         {project.screenshot ? (
-          <div className="h-full w-full overflow-hidden rounded-lg border border-surface-border">
+          // This slot's outer box (h-28/h-40, capped at max-w-md) is
+          // proportionally wider than the actual screenshot (959x539 ≈
+          // 1.78:1) — object-cover alone was scaling the image up to fill
+          // that wider box, cropping real chart content off the top/bottom
+          // to do it. Switching to object-contain on its own just traded
+          // that for the opposite problem: the image shrinks to fit
+          // inside the full w-full box, leaving huge empty margins on
+          // both sides and reading as a tiny, shrunken screenshot. Fixing
+          // it properly means sizing THIS wrapper itself to the image's
+          // real aspect ratio (from the actual screenshot dimensions, not
+          // a hardcoded guess) instead of stretching to the box's full,
+          // mismatched width — so the image fills its own box exactly,
+          // no crop and no dead space, and it's still centered in the
+          // slot by the parent's items-center/justify-center.
+          <div
+            className="h-full overflow-hidden rounded-lg border border-surface-border"
+            style={{ aspectRatio: `${project.screenshot.width} / ${project.screenshot.height}` }}
+          >
             <Image
               src={project.screenshot.src}
               alt={project.screenshot.alt}

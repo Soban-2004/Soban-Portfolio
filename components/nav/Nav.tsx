@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { motion } from "motion/react";
+import { EASE_DECELERATE } from "@/lib/motion-tokens";
 
 const LINKS = [
   { href: "#stats", label: "Stats" },
@@ -13,12 +14,132 @@ const LINKS = [
   { href: "#skills", label: "Skills" },
 ];
 
+// Mobile menu open/close timing — a deliberate "digital system activation"
+// beat, not a plain drawer slide: opening runs longer (~520ms) since it's
+// doing three things in sequence-ish (grid trace spreads, panel expands,
+// items stagger in), closing is quicker (~360ms) since collapsing reads
+// right as a snappier reversal, not a mirrored replay at the same speed.
+const OPEN_MS = 520;
+const CLOSE_MS = 360;
+
+// The clip-path's origin point — roughly under the hamburger (which sits
+// at the nav's left edge, half its own 44px width in), so the panel visibly
+// expands outward from the button that triggered it rather than from a
+// generic top-left page corner.
+const PANEL_ANCHOR = "2.75rem 0%";
+
+// The grid-trace overlay: a small cascade of cells (not the ~60-cell
+// LoadingScreen boot grid — this is a quick, subtler beat, not a full
+// takeover), each flashing a brief green pulse with a delay based on its
+// distance from the top-left corner (nearest the hamburger). Reversed on
+// close so the last cells to light up on the way in are the first to go
+// dark on the way out — energy contracting back toward its source.
+const GRID_COLS = 8;
+const GRID_ROWS = 4;
+const GRID_WAVE_DELAY_MS = 16;
+const GRID_MAX_WAVE = GRID_COLS - 1 + (GRID_ROWS - 1);
+const GRID_CELLS = Array.from({ length: GRID_COLS * GRID_ROWS }, (_, i) => ({
+  col: i % GRID_COLS,
+  row: Math.floor(i / GRID_COLS),
+  wave: (i % GRID_COLS) + Math.floor(i / GRID_COLS),
+}));
+
+function NavGridTrace({ reverse }: { reverse: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-10 grid"
+      style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}
+    >
+      {GRID_CELLS.map(({ col, row, wave }) => (
+        <span
+          key={`${col}-${row}`}
+          className="nav-grid-pulse border"
+          style={{ animationDelay: `${(reverse ? GRID_MAX_WAVE - wave : wave) * GRID_WAVE_DELAY_MS}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// The hamburger's three bars, morphing into an X via plain CSS transform/
+// opacity transitions rather than crossfading two different icon glyphs —
+// a real morph (top/bottom bars rotate and slide to meet in the middle,
+// the middle bar fades out) reads as one shape becoming another, which a
+// glyph swap never quite does. bg-current picks up the button's own text
+// color, so the accent tint applied there while open (see the button
+// below) colors these bars too.
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <span className="relative flex h-4 w-5 flex-col justify-between" aria-hidden="true">
+      <span
+        className={`ease-decelerate h-0.5 w-full rounded-full bg-current transition-transform duration-300 ${
+          open ? "translate-y-[7px] rotate-45" : ""
+        }`}
+      />
+      <span
+        className={`ease-decelerate h-0.5 w-full rounded-full bg-current transition-opacity duration-200 ${
+          open ? "opacity-0" : "opacity-100"
+        }`}
+      />
+      <span
+        className={`ease-decelerate h-0.5 w-full rounded-full bg-current transition-transform duration-300 ${
+          open ? "-translate-y-[7px] -rotate-45" : ""
+        }`}
+      />
+    </span>
+  );
+}
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string>("");
+  // mobileOpen is still the one source of truth every existing behavior
+  // below (outside-tap close, Escape, body-scroll lock, aria-expanded)
+  // reads from — untouched. `phase` is a purely visual layer on top of it
+  // that drives the animation, so the panel can keep rendering (and
+  // playing its closing animation) for a beat after mobileOpen already
+  // flips back to false, instead of vanishing instantly.
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [phase, setPhase] = useState<"closed" | "opening" | "open" | "closing">("closed");
+  const [reducedMotion, setReducedMotion] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  // Skips the initial mount below — mobileOpen always starts false, so
+  // without this the first effect run would still run the "closing"
+  // branch (phase was already "closed", but the effect doesn't know that
+  // without checking) and briefly mount a closing-styled panel that was
+  // never actually open. Ref, not state, since it shouldn't itself cause
+  // a re-render.
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      setPhase(mobileOpen ? "open" : "closed");
+      return;
+    }
+    if (mobileOpen) {
+      if (reducedMotion) {
+        setPhase("open");
+        return;
+      }
+      setPhase("opening");
+      const t = window.setTimeout(() => setPhase("open"), OPEN_MS);
+      return () => window.clearTimeout(t);
+    }
+    if (reducedMotion) {
+      setPhase("closed");
+      return;
+    }
+    setPhase("closing");
+    const t = window.setTimeout(() => setPhase("closed"), CLOSE_MS);
+    return () => window.clearTimeout(t);
+  }, [mobileOpen, reducedMotion]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -115,12 +236,14 @@ export function Nav() {
           <button
             ref={menuButtonRef}
             type="button"
-            className="flex h-11 w-11 items-center justify-center text-foreground md:hidden"
+            className={`flex h-11 w-11 items-center justify-center transition-colors duration-200 md:hidden ${
+              mobileOpen ? "text-accent" : "text-foreground"
+            }`}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((v) => !v)}
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            <HamburgerIcon open={mobileOpen} />
           </button>
 
           {/* Color-swap hover — same "opposite colors" treatment as
@@ -170,20 +293,70 @@ export function Nav() {
         </a>
       </nav>
 
-      {mobileOpen && (
-        <div
+      {phase !== "closed" && (
+        <motion.div
           ref={menuRef}
           // max-h + its own scroll, since body scroll is now locked while
           // this is open (see the effect above) — without it, on a short
           // phone screen the lower links (Certs/Skills/Contact) would be
           // stuck unreachable: the page itself can no longer scroll to
           // reveal them, so the panel has to be able to scroll internally
-          // instead.
-          className="max-h-[calc(100vh-4.5rem)] overflow-y-auto overscroll-contain border-t border-surface-border bg-background/95 backdrop-blur-md md:hidden"
+          // instead. relative: the anchor NavGridTrace's absolute overlay
+          // positions itself against.
+          className="relative max-h-[calc(100vh-4.5rem)] overflow-x-hidden overflow-y-auto overscroll-contain border-t border-surface-border bg-background/95 backdrop-blur-md md:hidden"
+          initial="closed"
+          animate={phase === "closing" ? "closed" : "open"}
+          variants={{
+            // circle(...% at PANEL_ANCHOR): a reveal mask centered right
+            // under the hamburger, growing from nothing to well past the
+            // panel's own diagonal (150%, so it fully covers a wide phone
+            // in landscape too) — "materializes outward from a single
+            // source" as an actual expanding shape, not just a fade.
+            closed: {
+              clipPath: `circle(0% at ${PANEL_ANCHOR})`,
+              transition: reducedMotion ? { duration: 0 } : { duration: 0.26, delay: 0.08, ease: EASE_DECELERATE },
+            },
+            open: {
+              clipPath: `circle(150% at ${PANEL_ANCHOR})`,
+              transition: reducedMotion ? { duration: 0 } : { duration: 0.42, ease: EASE_DECELERATE },
+            },
+          }}
         >
-          <ul className="flex flex-col px-6 py-4">
+          {!reducedMotion && (phase === "opening" || phase === "closing") && (
+            // key={phase}: "opening" and "closing" are two different
+            // strings, so switching between them forces React to unmount
+            // and remount this — which is what makes each cell's CSS
+            // animation (plays once per mount) actually replay every time
+            // the menu opens or closes, instead of only ever firing once.
+            <NavGridTrace key={phase} reverse={phase === "closing"} />
+          )}
+          <motion.ul
+            className="flex flex-col px-6 py-4"
+            initial="closed"
+            animate={phase === "closing" ? "closed" : "open"}
+            variants={{
+              closed: { transition: reducedMotion ? {} : { staggerChildren: 0.02, staggerDirection: -1 } },
+              open: {
+                transition: reducedMotion ? {} : { staggerChildren: 0.025, delayChildren: 0.13 },
+              },
+            }}
+          >
             {[...LINKS, { href: "#about", label: "About" }, { href: "#contact", label: "Contact" }].map((link) => (
-              <li key={link.href}>
+              <motion.li
+                key={link.href}
+                variants={{
+                  // A small fade/slide, not a real travel distance — this
+                  // is meant to read as content settling into place after
+                  // the system around it activates, not its own separate
+                  // slide-in moment.
+                  closed: { opacity: 0, y: 6, transition: reducedMotion ? { duration: 0 } : { duration: 0.12 } },
+                  open: {
+                    opacity: 1,
+                    y: 0,
+                    transition: reducedMotion ? { duration: 0 } : { duration: 0.16, ease: EASE_DECELERATE },
+                  },
+                }}
+              >
                 <a
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
@@ -191,10 +364,10 @@ export function Nav() {
                 >
                   {link.label}
                 </a>
-              </li>
+              </motion.li>
             ))}
-          </ul>
-        </div>
+          </motion.ul>
+        </motion.div>
       )}
     </header>
   );

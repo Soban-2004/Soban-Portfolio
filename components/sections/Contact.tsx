@@ -13,7 +13,18 @@ export function Contact() {
     <section id="contact" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
       <p className="font-mono text-xs text-accent">// 08 — CONTACT</p>
 
-      <div className="relative mt-3 overflow-hidden rounded-md border border-accent px-4 py-4 sm:mt-6 sm:px-10 sm:py-16">
+      {/* py-14 (was py-4): on mobile this box was noticeably shorter than
+          the section's own scroll-snap target — short enough that the
+          footer was already visible in the same screen underneath it,
+          reading as "contact + footer" instead of "contact, full stop."
+          Taller inner padding here (plus the bigger internal gaps below)
+          is what actually pushes the footer further down; sm+ is
+          untouched. A sliver of the footer can still land in view at the
+          very bottom of some taller phone screens — that's the browser's
+          own max-scroll clamp on the last section of the page, not
+          something padding alone can fully rule out without padding this
+          box far past what "more breathing room" reasonably means. */}
+      <div className="relative mt-3 overflow-hidden rounded-md border border-accent px-4 py-14 sm:mt-6 sm:px-10 sm:py-16">
         <CropMarks variant="glow" />
         <div
           aria-hidden="true"
@@ -25,7 +36,7 @@ export function Contact() {
           Let&apos;s build <Accent>something</Accent> grounded.
         </h2>
 
-        <div className="mx-auto mt-4 max-w-lg sm:mt-10">
+        <div className="mx-auto mt-8 max-w-lg sm:mt-10">
           <TerminalPanel title="contact.sh — zsh">
             <p className="font-mono text-xs text-muted">$ contact --engineer soban-shankar</p>
             {/* Pure flourish, no verified fact in it — the one line here
@@ -58,7 +69,10 @@ export function Contact() {
           </TerminalPanel>
         </div>
 
-        <div className="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3">
+        {/* mt-8 (was mt-4): the specific gap asked to grow — more visible
+            breathing room between the terminal panel and the button row
+            beneath it, not just a taller box overall. */}
+        <div className="mx-auto mt-8 flex max-w-lg flex-wrap justify-center gap-2 sm:mt-8 sm:gap-3">
           <Button href={`mailto:${identity.email}`} variant="accent" external ariaLabel="Send an email">
             $ SEND_MESSAGE
           </Button>

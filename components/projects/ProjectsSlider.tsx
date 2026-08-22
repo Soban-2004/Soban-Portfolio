@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useInView } from "motion/react";
 import { ProjectCard, type ProjectVariant } from "@/components/projects/ProjectCard";
+import { EASE_DECELERATE } from "@/lib/motion-tokens";
 import type { Project } from "@/lib/content";
 
 export interface ProjectSlide {
@@ -58,6 +59,29 @@ function ArrowGlyph({ direction }: { direction: "prev" | "next" }) {
   );
 }
 
+// Direction-aware slide, like a real carousel: pressing next brings the
+// new card in from the right while the old one exits left, pressing prev
+// is the mirror of that. `custom` (1 = forward/next, -1 = backward/prev)
+// picks which side each state sits on; x is a percentage of the card's
+// OWN width, not a fixed px offset, so it scales correctly at any card
+// size from mobile to desktop. direction 0 is the very first mount only
+// (no prior navigation to have a "from" side) — that one still gets the
+// original small pop-in instead of a slide, since sliding in from an
+// arbitrary edge on first paint wouldn't mean anything.
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction === 0 ? 0 : `${direction * 100}%`,
+    opacity: 0,
+    scale: direction === 0 ? 0.9 : 1,
+  }),
+  center: { x: "0%", opacity: 1, scale: 1 },
+  exit: (direction: number) => ({
+    x: direction === 0 ? 0 : `${direction * -100}%`,
+    opacity: 0,
+    scale: direction === 0 ? 0.94 : 1,
+  }),
+};
+
 export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   const n = slides.length;
   // Plain matchMedia in an effect, not motion/react's useReducedMotion()
@@ -96,6 +120,10 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   const inView = useInView(containerRef, { amount: 0.6 });
 
   const [index, setIndex] = useState(0);
+  // Which side the current transition slides in from: 1 = the new card
+  // enters from the right (moving forward), -1 = enters from the left
+  // (moving backward), 0 = initial mount (no slide, see slideVariants).
+  const [direction, setDirection] = useState(0);
   // Once a visitor manually navigates (arrow, dot, or a case-study
   // back-link landing on a specific project), autoplay stops for good —
   // yanking the view to the next slide out from under someone who just
@@ -104,8 +132,9 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   const [userInteracted, setUserInteracted] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  const goTo = (i: number) => {
+  const goTo = (i: number, dir: 1 | -1) => {
     setUserInteracted(true);
+    setDirection(dir);
     setIndex(((i % n) + n) % n);
   };
 
@@ -121,6 +150,12 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
       const idx = getTargetIndexFromHash(slides);
       if (idx !== null) {
         done = true;
+        // 0, not a real direction — this is "land directly on this
+        // project" from a case-study back-link, not a forward/backward
+        // step from whatever the default index was, so the plain fade/pop
+        // (same as the very first mount) reads more honestly than an
+        // arbitrary slide direction would.
+        setDirection(0);
         setIndex(idx);
         setUserInteracted(true);
         history.replaceState(null, "", window.location.pathname + window.location.search);
@@ -140,7 +175,10 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
 
   useEffect(() => {
     if (prefersReducedMotion || userInteracted || hovered || !inView || n <= 1) return;
-    const timer = window.setInterval(() => setIndex((i) => (i + 1) % n), AUTOPLAY_MS);
+    const timer = window.setInterval(() => {
+      setDirection(1);
+      setIndex((i) => (i + 1) % n);
+    }, AUTOPLAY_MS);
     return () => window.clearInterval(timer);
   }, [prefersReducedMotion, userInteracted, hovered, inView, n]);
 
@@ -155,9 +193,9 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   const FLICK_VELOCITY_THRESHOLD = 500; // px/s — a quick flick commits even with little travel
   const handleDragEnd = (_event: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
     if (info.offset.x < -DRAG_OFFSET_THRESHOLD || info.velocity.x < -FLICK_VELOCITY_THRESHOLD) {
-      goTo(index + 1);
+      goTo(index + 1, 1);
     } else if (info.offset.x > DRAG_OFFSET_THRESHOLD || info.velocity.x > FLICK_VELOCITY_THRESHOLD) {
-      goTo(index - 1);
+      goTo(index - 1, -1);
     }
   };
 
@@ -167,7 +205,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
         <button
           key={s.project.id}
           type="button"
-          onClick={() => goTo(i)}
+          onClick={() => goTo(i, i > index ? 1 : -1)}
           aria-label={`View ${s.project.name}`}
           aria-current={i === index}
           className={`h-2 w-2 rounded-full transition-[background-color,transform] duration-200 ${
@@ -204,33 +242,78 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
       <div className="relative mt-6 lg:flex lg:items-center lg:gap-4">
         <button
           type="button"
-          onClick={() => goTo(index - 1)}
+          onClick={() => goTo(index - 1, -1)}
           aria-label="Previous project"
           className={`${ARROW_BUTTON} hidden lg:flex`}
         >
           <ArrowGlyph direction="prev" />
         </button>
 
-        <div className="relative min-w-0 lg:flex-1">
-          <AnimatePresence mode="wait">
-            {/* Same bulge/pop character the old scroll-centered slide had
-                — a spring that visibly overshoots past full size and
-                settles back, not a plain ease-to-a-stop. layout: the
-                card's natural height now varies slide to slide (no more
-                forced 480px track height), so this smooths that height
-                change too instead of the row below it jumping. */}
+        {/* The slide's actual clipping viewport: p-4/-m-4 is bleed room,
+            not visible spacing — padding pushes this box's own edges out
+            a bit so a card's hover glow (box-shadow) doesn't get cut off
+            flush against the clip boundary, and the matching negative
+            margin cancels that padding back out for layout purposes, so
+            neither the arrow gap above nor the section's overall width
+            actually changes. Kept deliberately smaller than the section's
+            own px-6 side padding (both derive from the same fluid
+            --spacing token, so this stays proportionally safe at any
+            viewport) — enough bleed isn't the point here, not overflowing
+            past the edge of the page is. overflow-hidden is what turns the
+            100%-offscreen enter/exit below into an actual "slides past the
+            edge of a fixed frame" carousel motion instead of visibly
+            overflowing the page (and avoiding a temporary horizontal
+            scrollbar mid-transition). */}
+        <div className="relative -m-4 min-w-0 overflow-hidden p-4 lg:flex-1">
+          <AnimatePresence mode="popLayout" custom={direction}>
+            {/* Direction-aware slide (see slideVariants) — pressing next
+                brings the new card in from the right as the old one exits
+                left, mirrored for prev, matching how a real carousel/slide
+                deck transitions rather than the previous in-place scale
+                pop. `custom={direction}` is what feeds slideVariants'
+                per-state functions which side each transition uses.
+                mode="popLayout" (not "wait"): the two cards need to be
+                visibly on screen and sliding past each other at the same
+                time — "wait" runs the exit fully to completion before the
+                enter even starts, which read as a blank flash between them
+                rather than a continuous slide. popLayout pulls the exiting
+                card out of normal layout flow the instant it starts
+                exiting, so the entering one doesn't have to wait for it
+                (and the two never double-stack the container's height in
+                the meantime, without this needing a fixed-height track). */}
             <motion.div
               key={slide.project.id}
-              layout
-              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.94 }}
+              custom={direction}
+              variants={slideVariants}
+              initial={prefersReducedMotion ? false : "enter"}
+              animate="center"
+              exit={prefersReducedMotion ? undefined : "exit"}
+              // A 300/30 spring here settled in under 100ms — far too quick
+              // to actually read as a slide, just a snap. A slower tween on
+              // the site's own EASE_DECELERATE curve (the same one every
+              // scroll reveal uses) gives the motion enough duration to
+              // actually be seen traveling across the frame; opacity/scale
+              // stay a bit quicker so the card doesn't look transparent for
+              // the entire trip.
               transition={
                 prefersReducedMotion
                   ? { duration: 0 }
-                  : { type: "spring", stiffness: 220, damping: 16, mass: 0.5 }
+                  : {
+                      x: { duration: 0.45, ease: EASE_DECELERATE },
+                      opacity: { duration: 0.3 },
+                      scale: { duration: 0.3 },
+                    }
               }
-              className="relative touch-pan-y"
+              // sm:w-[70%]/mx-auto: the other half of shrinking the desktop
+              // card to 70% (see ProjectCard.tsx's own zoom:0.7 comment for
+              // why that's on the card and this is on its unzoomed parent
+              // instead of both together) — this element was stretching
+              // full-width via the wrapper's flex-1; capping it at 70% of
+              // that and re-centering is what actually shrinks the
+              // carousel's footprint instead of just the content painted
+              // inside a same-size box. Left off below sm — mobile is
+              // untouched.
+              className="relative touch-pan-y sm:mx-auto sm:w-[70%]"
               drag={supportsSwipe && n > 1 ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.12}
@@ -275,7 +358,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
 
         <button
           type="button"
-          onClick={() => goTo(index + 1)}
+          onClick={() => goTo(index + 1, 1)}
           aria-label="Next project"
           className={`${ARROW_BUTTON} hidden lg:flex`}
         >
@@ -288,11 +371,11 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
           arrows above take over, so only the dots repeat here — one row,
           not duplicated. */}
       <div className="mt-5 flex items-center justify-center gap-4 sm:mt-8 sm:gap-6 lg:hidden">
-        <button type="button" onClick={() => goTo(index - 1)} aria-label="Previous project" className={ARROW_BUTTON}>
+        <button type="button" onClick={() => goTo(index - 1, -1)} aria-label="Previous project" className={ARROW_BUTTON}>
           <ArrowGlyph direction="prev" />
         </button>
         {dots}
-        <button type="button" onClick={() => goTo(index + 1)} aria-label="Next project" className={ARROW_BUTTON}>
+        <button type="button" onClick={() => goTo(index + 1, 1)} aria-label="Next project" className={ARROW_BUTTON}>
           <ArrowGlyph direction="next" />
         </button>
       </div>

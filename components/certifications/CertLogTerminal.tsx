@@ -20,10 +20,18 @@ import { certifications, type Certification } from "@/lib/content";
 
 const COLLAPSED_COUNT = 5;
 const COMMAND_TEXT = "$ cert_log --all";
+const COLLAPSE_TEXT = "$ cert_log --collapse";
 const FETCH_TEXT = "Fetching remaining credentials...";
 const TYPE_SPEED_COMMAND = 26; // ms/char — short line, reads as deliberate keystrokes
 const TYPE_SPEED_FETCH = 14; // ms/char — longer line, faster or the pause drags
 const ROW_STAGGER_MS = 130;
+
+// Both the "run this" and "undo this" commands share one visual treatment
+// — a real bordered/filled control, not plain inline text with a hover
+// nudge — so either one reads immediately as something you can click, not
+// just more terminal output to skim past.
+const CMD_BUTTON =
+  "group mt-2 inline-flex items-center gap-1.5 rounded-md border border-accent/40 bg-accent/5 px-2.5 py-1.5 text-foreground transition-colors duration-150 hover:border-accent hover:bg-accent/10 hover:text-accent active:border-accent active:bg-accent/10 active:text-accent";
 
 type Phase = "collapsed" | "typingCommand" | "typingFetch" | "streaming" | "done";
 
@@ -58,20 +66,6 @@ function useTypewriter(text: string, active: boolean, speed: number) {
   }, [text, active, speed]);
 
   return { out, done };
-}
-
-// Leader-dots stat line ("CREDENTIALS FOUND ........ 09") via a flexed
-// dotted border rather than hand-padding literal dot characters — the
-// border approach holds its alignment at any label length or column
-// width instead of needing per-viewport tuning.
-function StatLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <span className="shrink-0 text-muted">{label}</span>
-      <span className="min-w-4 flex-1 border-b border-dotted border-surface-border" aria-hidden="true" />
-      <span className="shrink-0 text-foreground">{value}</span>
-    </div>
-  );
 }
 
 function CertRow({ cert, index }: { cert: Certification; index: number }) {
@@ -149,6 +143,15 @@ export function CertLogTerminal() {
     setPhase("typingCommand");
   };
 
+  // The reverse of expand(): back to the 5-row view, no re-play of the
+  // reveal sequence on the way down — that sequence is there to sell
+  // "fetching more," which doesn't apply to going back to fewer.
+  const collapse = () => {
+    if (phase !== "done") return;
+    setStreamedCount(0);
+    setPhase("collapsed");
+  };
+
   // Phase chain: command types out -> brief pause -> "fetching" types
   // out -> brief pause -> rows stream in one at a time -> done. Each step
   // only advances once the previous one's typewriter/stagger genuinely
@@ -193,8 +196,6 @@ export function CertLogTerminal() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [phase, cmdTyper.out, fetchTyper.out, streamedCount]);
 
-  const displayedCount = phase === "collapsed" ? COLLAPSED_COUNT : total;
-
   return (
     <TerminalPanel title="cert_log --list">
       {/* max-h + its own scroll: the whole point of streaming certs into
@@ -208,12 +209,6 @@ export function CertLogTerminal() {
       <div ref={scrollRef} className="terminal-scroll max-h-[400px] overflow-y-auto font-mono text-xs sm:max-h-[460px]">
         <p className="text-foreground">$ cat credentials.log</p>
 
-        <div className="mt-3 space-y-1">
-          <StatLine label="CREDENTIALS FOUND" value={pad(total)} />
-          <StatLine label="DISPLAYING" value={pad(displayedCount)} />
-          <StatLine label="STATUS" value="VERIFIED" />
-        </div>
-
         <div className="my-3 border-t border-surface-border" aria-hidden="true" />
 
         <div>
@@ -223,11 +218,7 @@ export function CertLogTerminal() {
         </div>
 
         {phase === "collapsed" && remaining > 0 && (
-          <button
-            type="button"
-            onClick={expand}
-            className="group mt-2 inline-flex items-center gap-1 text-foreground transition-transform duration-150 hover:translate-x-0.5 hover:text-accent active:translate-x-0.5 active:text-accent"
-          >
+          <button type="button" onClick={expand} className={CMD_BUTTON}>
             {COMMAND_TEXT}
             <span className="cert-log-cursor text-accent" aria-hidden="true">
               ▌
@@ -263,15 +254,17 @@ export function CertLogTerminal() {
             {phase === "done" && (
               <>
                 <div className="my-3 border-t border-surface-border" aria-hidden="true" />
-                <div className="space-y-1">
-                  <p className="text-foreground">
-                    {pad(total)} credentials loaded
-                  </p>
-                  <StatLine label="STATUS" value="VERIFIED" />
-                </div>
-                <p className="mt-3 text-foreground">
-                  $ <span className="cert-log-cursor text-accent">▌</span>
+                <p className="text-foreground">✓ {pad(total)} credentials loaded</p>
+                <p className="mt-1 text-accent-soft">
+                  STATUS: <span className="text-foreground">VERIFIED</span>
                 </p>
+                <button type="button" onClick={collapse} className={CMD_BUTTON}>
+                  {COLLAPSE_TEXT}
+                  <span className="cert-log-cursor text-accent" aria-hidden="true">
+                    ▌
+                  </span>
+                  <span className="sr-only"> — show fewer credentials</span>
+                </button>
               </>
             )}
           </div>

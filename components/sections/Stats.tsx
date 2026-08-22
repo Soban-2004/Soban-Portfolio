@@ -32,6 +32,14 @@ const CORE_STACK = [
   "Deepgram",
 ];
 
+// Same abbreviation used on the project cards' own tech-tag chips — the
+// two names here long enough to be the reason a wrapped mobile row needs
+// extra lines; everything else in CORE_STACK is already short.
+const CORE_STACK_MOBILE_LABEL: Record<string, string> = {
+  "Multi-Agent Orchestration": "Multi-Agent",
+  "MCP (Model Context Protocol)": "MCP",
+};
+
 export function Stats() {
   const flipkart = projects.find((p) => p.id === "flipkart-faq")!;
   const resumeMatcher = projects.find((p) => p.id === "resume-matcher")!;
@@ -78,11 +86,13 @@ export function Stats() {
           className="col-span-2 rounded-md border border-surface-border p-3 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)] active:-translate-y-1 active:border-accent/60 active:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)] sm:p-5 lg:col-span-1"
         >
           <p className="font-mono text-xs uppercase tracking-wide text-muted">Core Stack</p>
-          {/* Single scrollable row on mobile instead of wrapping to ~5 rows
-              of chips — sm+ restores the original wrap. */}
-          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 sm:mt-3 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          {/* Wraps at every breakpoint now — no horizontal scroll/slide to
+              discover. The two longest names get a shorter mobileLabel
+              (see CORE_STACK_MOBILE_LABEL) specifically to keep this from
+              needing more rows than it should below sm. */}
+          <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-3">
             {CORE_STACK.map((tech, i) => (
-              <TagChip key={tech} label={tech} filled={i === 0} />
+              <TagChip key={tech} label={tech} mobileLabel={CORE_STACK_MOBILE_LABEL[tech]} filled={i === 0} />
             ))}
           </div>
         </Reveal>

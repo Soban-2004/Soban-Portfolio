@@ -113,7 +113,9 @@ export function Hero() {
             including the buttons/social row, lands inside one mobile
             viewport instead of needing a scroll to reach them. */}
         <h1 className="mt-3 max-w-4xl text-balance leading-[1.15] text-foreground sm:mt-5">
-          <span className="font-display-3d block text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+          {/* text-4xl (was text-3xl): a size bump specifically requested
+              for mobile — sm: and up are untouched. */}
+          <span className="font-display-3d block text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
             {identity.name}
           </span>
           <span className="mt-2 block font-sans text-base font-normal normal-case tracking-normal text-muted sm:mt-4 sm:text-xl md:text-2xl">

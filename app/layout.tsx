@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Bungee, Press_Start_2P } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Nav } from "@/components/nav/Nav";
 import { Footer } from "@/components/sections/Footer";
@@ -93,6 +94,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
+        {/* Vercel Web Analytics — page views + visitor counts, viewable in
+            the Vercel dashboard under the project's Analytics tab. Purely
+            a beacon on route change (no cookies, nothing rendered), so it
+            has no visual/layout footprint here. Only actually collects
+            data once this is deployed on Vercel with Analytics enabled for
+            the project (a free toggle in the dashboard) — it's a no-op
+            locally and on any other host. */}
+        <Analytics />
       </body>
     </html>
   );

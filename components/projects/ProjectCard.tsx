@@ -221,46 +221,22 @@ export function ProjectCard({
         </button>
       )}
 
-      {/* Taller + wider slot specifically when there's a real screenshot
-          to show (currently just Cricket Analysis) — the shared h-28/h-40
-          cap the other two content types (terminal panel, stat grid) use
-          was leaving a real dashboard screenshot small and boxed in a lot
-          of empty card space once every card got pinned to the same
-          min-height. terminalLines/stat-grid cards are untouched. */}
-      <div
-        className={`mt-3 flex shrink-0 items-center justify-center overflow-hidden sm:mt-3 ${
-          project.screenshot ? "h-40 max-w-xl sm:h-48" : "h-28 max-w-md sm:h-40"
-        }`}
-      >
-        {project.screenshot ? (
-          // This slot's outer box (h-28/h-40, capped at max-w-md) is
-          // proportionally wider than the actual screenshot (959x539 ≈
-          // 1.78:1) — object-cover alone was scaling the image up to fill
-          // that wider box, cropping real chart content off the top/bottom
-          // to do it. Switching to object-contain on its own just traded
-          // that for the opposite problem: the image shrinks to fit
-          // inside the full w-full box, leaving huge empty margins on
-          // both sides and reading as a tiny, shrunken screenshot. Fixing
-          // it properly means sizing THIS wrapper itself to the image's
-          // real aspect ratio (from the actual screenshot dimensions, not
-          // a hardcoded guess) instead of stretching to the box's full,
-          // mismatched width — so the image fills its own box exactly,
-          // no crop and no dead space, and it's still centered in the
-          // slot by the parent's items-center/justify-center.
-          <div
-            className="h-full overflow-hidden rounded-lg border border-surface-border"
-            style={{ aspectRatio: `${project.screenshot.width} / ${project.screenshot.height}` }}
-          >
-            <Image
-              src={project.screenshot.src}
-              alt={project.screenshot.alt}
-              width={project.screenshot.width}
-              height={project.screenshot.height}
-              className="h-full w-full object-cover"
-              sizes="480px"
-            />
-          </div>
-        ) : terminalLines ? (
+      {terminalLines ? (
+        // No fixed height / overflow-hidden here, unlike the screenshot and
+        // stat-grid slots below — this one's content is real text (a
+        // title bar plus N log lines, one of which can be long enough to
+        // wrap), not a fixed-content grid or an aspect-ratio-boxed image,
+        // so a hard-capped box clips it instead of scaling it. Confirmed
+        // on the Agentic RAG card specifically: its 3rd line ("latency:
+        // 4.5s -> 1.0s (7 guardrail scanners)") pushed the panel's real
+        // height past the old shared h-28 cap by a few px at phone widths
+        // (the site's fluid --spacing token shrinks h-28 itself well below
+        // its nominal 112px down there, on top of that), silently cutting
+        // the bottom edge off. Sizing to natural content height instead
+        // just lets a 3-line terminal be taller than a 2-line one — the
+        // card's own min-height is a floor, not a ceiling, so a taller
+        // slot here doesn't break anything the way clipping did.
+        <div className="mt-3 flex w-full justify-center sm:mt-3">
           <div className="w-full max-w-lg">
             <TerminalPanel title={`${project.id}.log`} accent={variant === "alert" ? "border-critical" : "border-surface-border"}>
               {terminalLines.map((line) => (
@@ -270,23 +246,67 @@ export function ProjectCard({
               ))}
             </TerminalPanel>
           </div>
-        ) : (
-          <div className="grid w-full grid-cols-2 gap-2 sm:gap-3">
-            <div className={`rounded-lg border p-2 sm:p-3 ${isFlagship ? "border-background/30" : "border-surface-border"}`}>
-              <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-accent"}`}>
-                {project.headlineStat.value}
-              </p>
-              <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>{project.headlineStat.label}</p>
+        </div>
+      ) : (
+        // Taller + wider slot specifically when there's a real screenshot
+        // to show (currently just Cricket Analysis) — the shared h-28/h-40
+        // cap the stat-grid content type uses was leaving a real dashboard
+        // screenshot small and boxed in a lot of empty card space once
+        // every card got pinned to the same min-height. Both of these two
+        // are genuinely fixed-content (a fixed-size image box, a 2-cell
+        // stat grid that never grows), so a hard-capped box is the right
+        // call for them — unlike terminalLines above, they can't overflow.
+        <div
+          className={`mt-3 flex shrink-0 items-center justify-center overflow-hidden sm:mt-3 ${
+            project.screenshot ? "h-40 max-w-xl sm:h-48" : "h-28 max-w-md sm:h-40"
+          }`}
+        >
+          {project.screenshot ? (
+            // This slot's outer box (h-40/h-48, capped at max-w-xl) is
+            // proportionally wider than the actual screenshot (959x539 ≈
+            // 1.78:1) — object-cover alone was scaling the image up to fill
+            // that wider box, cropping real chart content off the top/bottom
+            // to do it. Switching to object-contain on its own just traded
+            // that for the opposite problem: the image shrinks to fit
+            // inside the full w-full box, leaving huge empty margins on
+            // both sides and reading as a tiny, shrunken screenshot. Fixing
+            // it properly means sizing THIS wrapper itself to the image's
+            // real aspect ratio (from the actual screenshot dimensions, not
+            // a hardcoded guess) instead of stretching to the box's full,
+            // mismatched width — so the image fills its own box exactly,
+            // no crop and no dead space, and it's still centered in the
+            // slot by the parent's items-center/justify-center.
+            <div
+              className="h-full overflow-hidden rounded-lg border border-surface-border"
+              style={{ aspectRatio: `${project.screenshot.width} / ${project.screenshot.height}` }}
+            >
+              <Image
+                src={project.screenshot.src}
+                alt={project.screenshot.alt}
+                width={project.screenshot.width}
+                height={project.screenshot.height}
+                className="h-full w-full object-cover"
+                sizes="480px"
+              />
             </div>
-            <div className={`rounded-lg border p-2 sm:p-3 ${isFlagship ? "border-background/30" : "border-surface-border"}`}>
-              <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-foreground"}`}>
-                {project.techTags.length}
-              </p>
-              <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>Technologies</p>
+          ) : (
+            <div className="grid w-full grid-cols-2 gap-2 sm:gap-3">
+              <div className={`rounded-lg border p-2 sm:p-3 ${isFlagship ? "border-background/30" : "border-surface-border"}`}>
+                <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-accent"}`}>
+                  {project.headlineStat.value}
+                </p>
+                <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>{project.headlineStat.label}</p>
+              </div>
+              <div className={`rounded-lg border p-2 sm:p-3 ${isFlagship ? "border-background/30" : "border-surface-border"}`}>
+                <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-foreground"}`}>
+                  {project.techTags.length}
+                </p>
+                <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>Technologies</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 sm:gap-x-5 sm:pt-4">
         {isInternal ? (
@@ -326,7 +346,7 @@ export function ProjectCard({
           // card.
           <a
             href={project.liveUrl}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-md border-2 border-critical bg-critical px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wide text-background transition-colors duration-150 hover:bg-transparent hover:text-critical active:bg-transparent active:text-critical sm:min-h-11 sm:px-3 sm:py-1.5 sm:text-sm"
+            className="invert-static-burst inline-flex min-h-9 items-center gap-1.5 rounded-md border-2 border-critical bg-critical px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wide text-background transition-colors duration-150 hover:bg-transparent hover:text-critical active:bg-transparent active:text-critical sm:min-h-11 sm:px-3 sm:py-1.5 sm:text-sm"
           >
             LIVE_LINK <ExternalLink size={12} className="sm:size-3.5" />
           </a>

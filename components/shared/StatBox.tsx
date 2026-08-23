@@ -1,4 +1,8 @@
+"use client";
+
+import { useReducedMotion } from "motion/react";
 import { Reveal } from "@/components/shared/Reveal";
+import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
 // A bordered stat readout — a small mono label above a big bold number.
 // The `filled` variant is the "one card breaks the rhythm" device (Commit
@@ -11,7 +15,14 @@ import { Reveal } from "@/components/shared/Reveal";
 // without this the whole lift/glow treatment was invisible on mobile.
 // :active does fire on touchstart, so tapping (and holding) a card now
 // gets the same feedback a mouse hover gives on desktop.
-
+//
+// value is a caller-formatted string, not a raw number — most callers
+// pass things like "20+", "~95%", "4.5s → 1s" that don't have a
+// meaningful "count up to" animation. Only a genuinely bare integer
+// string ("3", "20") gets the AnimatedNumber count-up/resolve treatment;
+// anything else (checked via a plain digits-only regex, not a parseFloat
+// that'd happily also accept "20+" or "2,000") just renders as-is, same
+// safety net AnimatedNumber's own original home (CountUpStat) always had.
 export function StatBox({
   value,
   label,
@@ -27,6 +38,10 @@ export function StatBox({
   // little after the last) instead of all three popping in at once.
   delay?: number;
 }) {
+  const prefersReducedMotion = useReducedMotion();
+  const numeric = /^\d+$/.test(value) ? Number(value) : null;
+  const canAnimate = numeric !== null && !prefersReducedMotion;
+
   return (
     <Reveal
       y={16}
@@ -37,7 +52,9 @@ export function StatBox({
           : "border-surface-border hover:border-accent/60 hover:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)] active:border-accent/60 active:shadow-[0_10px_28px_-12px_rgba(62,207,142,0.35)]"
       }`}
     >
-      <p className={`font-mono text-2xl font-black sm:text-3xl ${filled ? "text-background" : accent}`}>{value}</p>
+      <p className={`font-mono text-2xl font-black sm:text-3xl ${filled ? "text-background" : accent}`}>
+        {canAnimate ? <AnimatedNumber target={numeric} /> : value}
+      </p>
       <p className={`mt-1 font-mono text-xs uppercase tracking-wide ${filled ? "text-background/70" : "text-muted"}`}>
         {label}
       </p>

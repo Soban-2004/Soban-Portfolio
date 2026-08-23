@@ -108,7 +108,7 @@ export const identity = {
   phone: "+91 94443 89781", // tel: link uses the digits-only form, see Contact.tsx
   github: "https://github.com/Soban-2004",
   linkedin: "https://www.linkedin.com/in/soban-shankar-7731b3305/",
-  resumeUrl: "/resume-soban-shankar-2026.pdf", // TODO: drop the actual PDF into /public — see build notes
+  resumeUrl: "/resume-soban-shankar-2026.pdf", // served from public/ — stale "TODO: drop the PDF in" note removed, it's already there and current
 };
 
 // ---------------------------------------------------------------------------

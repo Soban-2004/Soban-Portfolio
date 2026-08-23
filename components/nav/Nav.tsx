@@ -15,12 +15,16 @@ const LINKS = [
 ];
 
 // Mobile menu open/close timing — a deliberate "digital system activation"
-// beat, not a plain drawer slide: opening runs longer (~520ms) since it's
-// doing three things in sequence-ish (grid trace spreads, panel expands,
-// items stagger in), closing is quicker (~360ms) since collapsing reads
-// right as a snappier reversal, not a mirrored replay at the same speed.
-const OPEN_MS = 520;
-const CLOSE_MS = 360;
+// beat, not a plain drawer slide: opening runs longer since it's doing
+// three things in sequence-ish (scanline sweeps, panel expands, items
+// stagger in), closing is quicker since collapsing reads right as a
+// snappier reversal, not a mirrored replay at the same speed. Bumped up
+// from 520/360 per "make it a bit slow" — specifically to give the
+// scanline sweep (below) more room to travel at a slower, more visible
+// pace; the panel's own clip-path reveal and item stagger keep their own
+// separate, already-tuned durations regardless of this.
+const OPEN_MS = 700;
+const CLOSE_MS = 480;
 
 // The clip-path's origin point — roughly under the hamburger (which sits
 // at the nav's left edge, half its own 44px width in), so the panel visibly
@@ -28,37 +32,37 @@ const CLOSE_MS = 360;
 // generic top-left page corner.
 const PANEL_ANCHOR = "2.75rem 0%";
 
-// The grid-trace overlay: a small cascade of cells (not the ~60-cell
-// LoadingScreen boot grid — this is a quick, subtler beat, not a full
-// takeover), each flashing a brief green pulse with a delay based on its
-// distance from the top-left corner (nearest the hamburger). Reversed on
-// close so the last cells to light up on the way in are the first to go
-// dark on the way out — energy contracting back toward its source.
-const GRID_COLS = 8;
-const GRID_ROWS = 4;
-const GRID_WAVE_DELAY_MS = 16;
-const GRID_MAX_WAVE = GRID_COLS - 1 + (GRID_ROWS - 1);
-const GRID_CELLS = Array.from({ length: GRID_COLS * GRID_ROWS }, (_, i) => ({
-  col: i % GRID_COLS,
-  row: Math.floor(i / GRID_COLS),
-  wave: (i % GRID_COLS) + Math.floor(i / GRID_COLS),
-}));
+// The scanline sweep — replaced the earlier grid-cell cascade per explicit
+// feedback ("remove this grid effect... suggest a different one"), from a
+// menu of alternatives discussed and picked from directly: a single bright
+// band traveling top-to-bottom across the panel as it opens, bottom-to-top
+// as it closes — a CRT tube scanning on/off, not many cells flashing at
+// once. Purely a decorative flourish layered over the panel (z-10,
+// pointer-events-none, aria-hidden) — the actual reveal is still the
+// panel's own clip-path circle expand/contract below; this never gates
+// content visibility itself, it just sweeps past already-revealed content
+// once. The gradient's bright edge sits at whichever end is the direction
+// of travel's *leading* edge (bottom for the downward open sweep, top for
+// the upward close sweep) with a fading trail behind it, not a flat line —
+// a flat 2px bar read as a moving rule, not a beam.
+const SCAN_BAND_HEIGHT = "3rem";
 
-function NavGridTrace({ reverse }: { reverse: boolean }) {
+function NavScanline({ reverse }: { reverse: boolean }) {
   return (
-    <div
+    <motion.div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-10 grid"
-      style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`, gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)` }}
-    >
-      {GRID_CELLS.map(({ col, row, wave }) => (
-        <span
-          key={`${col}-${row}`}
-          className="nav-grid-pulse border"
-          style={{ animationDelay: `${(reverse ? GRID_MAX_WAVE - wave : wave) * GRID_WAVE_DELAY_MS}ms` }}
-        />
-      ))}
-    </div>
+      className="pointer-events-none absolute inset-x-0 z-10"
+      style={{
+        height: SCAN_BAND_HEIGHT,
+        background: reverse
+          ? "linear-gradient(to bottom, rgba(62, 207, 142, 0.85), rgba(62, 207, 142, 0.2) 45%, transparent)"
+          : "linear-gradient(to bottom, transparent, rgba(62, 207, 142, 0.2) 55%, rgba(62, 207, 142, 0.85))",
+        boxShadow: reverse ? "0 -6px 14px -2px rgba(62, 207, 142, 0.5)" : "0 6px 14px -2px rgba(62, 207, 142, 0.5)",
+      }}
+      initial={{ top: reverse ? "100%" : `-${SCAN_BAND_HEIGHT}` }}
+      animate={{ top: reverse ? `-${SCAN_BAND_HEIGHT}` : "100%" }}
+      transition={{ duration: (reverse ? CLOSE_MS - 20 : OPEN_MS - 40) / 1000, ease: EASE_DECELERATE }}
+    />
   );
 }
 
@@ -287,7 +291,7 @@ export function Nav() {
             with a primary action. */}
         <a
           href="#contact"
-          className="flex min-h-9 items-center rounded-md border-2 border-accent bg-accent px-3 py-1.5 font-mono text-xs font-bold text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:px-4"
+          className="invert-static-burst flex min-h-9 items-center rounded-md border-2 border-accent bg-accent px-3 py-1.5 font-mono text-xs font-bold text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:px-4"
         >
           HIRE()
         </a>
@@ -325,10 +329,11 @@ export function Nav() {
           {!reducedMotion && (phase === "opening" || phase === "closing") && (
             // key={phase}: "opening" and "closing" are two different
             // strings, so switching between them forces React to unmount
-            // and remount this — which is what makes each cell's CSS
-            // animation (plays once per mount) actually replay every time
-            // the menu opens or closes, instead of only ever firing once.
-            <NavGridTrace key={phase} reverse={phase === "closing"} />
+            // and remount this — guarantees a fresh initial->animate run
+            // every time the menu opens or closes, rather than leaving it
+            // to the (already-reliable, but less explicit) fact that this
+            // element only ever exists during these two phases anyway.
+            <NavScanline key={phase} reverse={phase === "closing"} />
           )}
           <motion.ul
             className="flex flex-col px-6 py-4"

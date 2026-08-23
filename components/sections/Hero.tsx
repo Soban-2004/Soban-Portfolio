@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { GitHubIcon, LinkedInIcon } from "@/components/shared/BrandIcons";
 import { Button } from "@/components/shared/Button";
 import { CropMarks } from "@/components/shared/CropMarks";
@@ -38,6 +39,29 @@ export function Hero() {
     return () => window.removeEventListener(BOOT_UNLOCK_EVENT, onUnlock);
   }, []);
 
+  // Starts false to match the server render, corrected right after mount
+  // — same reasoning as every other reduced-motion check on this site
+  // (matchMedia isn't available during SSR, and the hook version of this
+  // resolves a render late, which is a real hydration-mismatch risk for
+  // anything feeding a Framer style prop, not just a cosmetic delay).
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+
+  // Two depth layers drifting at different rates as the visitor scrolls
+  // past Hero — the glow blob (the "far" layer) moves more, the watermark
+  // (the "near" layer) moves less and in the opposite direction, the
+  // classic parallax cue for depth rather than everything scrolling as
+  // one flat plane. Range capped at 700px, roughly Hero's own height —
+  // parallax stops meaning anything once Hero has scrolled out of view,
+  // and useTransform clamps to its output extremes past the input range
+  // by default, so nothing needs extra bounds-checking here.
+  const { scrollY } = useScroll();
+  const glowX = useTransform(scrollY, [0, 700], [0, 40]);
+  const glowY = useTransform(scrollY, [0, 700], [0, 100]);
+  const watermarkY = useTransform(scrollY, [0, 700], [0, -60]);
+
   return (
     <section
       id="top"
@@ -50,11 +74,26 @@ export function Hero() {
           texture and scanline sweep are now global (AmbientBackground,
           mounted once in the root layout) so they're visible throughout
           the page, not just here. */}
-      <div
+      {/* Split across two nested elements, not one: .glow-pulse already
+          drives its own `transform: scale(...)` breathing via a CSS
+          keyframe animation, and a CSS animation targeting `transform`
+          wins over/ignores a same-property Framer inline style on the
+          SAME element — confirmed empirically, the parallax translate
+          below was silently a no-op until this split (getComputedStyle
+          showed only the scale, no translate, at any scroll position).
+          The outer motion.div owns the scroll-linked x/y translate; the
+          inner plain div keeps the untouched scale/opacity breathe — two
+          different elements, two different transforms, no conflict. */}
+      <motion.div
         aria-hidden="true"
-        className="glow-pulse pointer-events-none absolute -top-40 right-0 h-[36rem] w-[36rem] rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
-      />
+        className="pointer-events-none absolute -top-40 right-0 h-[36rem] w-[36rem]"
+        style={{ x: prefersReducedMotion ? 0 : glowX, y: prefersReducedMotion ? 0 : glowY }}
+      >
+        <div
+          className="glow-pulse h-full w-full rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
+        />
+      </motion.div>
 
       {/* Ghost watermark typography (Sawad-style layered type) — the site's
           own identity, blown up huge. Position history, per successive
@@ -71,14 +110,18 @@ export function Hero() {
           laptop viewport gives it, so it's now laptop-and-up only
           (lg: 1024px+), hidden through every phone AND tablet size rather
           than just phones. */}
-      <div aria-hidden="true" className="pointer-events-none absolute right-11 top-32 hidden select-none lg:block">
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-11 top-32 hidden select-none lg:block"
+        style={{ y: prefersReducedMotion ? 0 : watermarkY }}
+      >
         <p className="watermark-base whitespace-nowrap font-mono text-[3.5rem] font-bold leading-none sm:text-[4.5rem]">
           AI ENGINEER
         </p>
         <p className="watermark-sweep absolute inset-0 whitespace-nowrap font-mono text-[3.5rem] font-bold leading-none sm:text-[4.5rem]">
           AI ENGINEER
         </p>
-      </div>
+      </motion.div>
 
       {/* Left-to-right fade-in, triggered by LoadingScreen's
           BOOT_UNLOCK_EVENT (see the listener above) once the Matrix-unlock

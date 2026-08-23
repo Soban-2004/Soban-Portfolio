@@ -136,7 +136,7 @@ export function Stats() {
             as HIRE() in the nav and LIVE_LINK on project cards. */}
         <Link
           href="#contact"
-          className="ml-auto inline-flex min-h-9 shrink-0 items-center rounded-md border-2 border-accent bg-accent px-3.5 py-1.5 font-mono text-xs font-medium text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+          className="invert-static-burst ml-auto inline-flex min-h-9 shrink-0 items-center rounded-md border-2 border-accent bg-accent px-3.5 py-1.5 font-mono text-xs font-medium text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
         >
           CONTACT()
         </Link>

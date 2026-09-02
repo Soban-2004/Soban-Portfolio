@@ -187,13 +187,16 @@ export const projects: Project[] = [
     name: "AI Resume & Job Matcher",
     period: "Aug 2025 – Nov 2025 (Updated May 2026)",
     description:
-      "Full-stack AI recruitment platform — resume analysis for job seekers, hiring workflows for recruiters. Pipeline: query → dense + BM25 retrieval → reciprocal rank fusion → cross-encoder rerank → GitHub-corroborated, cited answer.",
+      "Full-stack AI recruitment platform — resume analysis for job seekers, hiring workflows for recruiters. Pipeline: document load (OCR fallback for scanned resumes) → dense + BM25 retrieval → reciprocal rank fusion → cross-encoder rerank → GitHub-corroborated, cited answer.",
     shortDescription: "An AI platform that matches resumes to jobs — for job seekers and hiring teams alike.",
     highlights: [
       "Hybrid retrieval: dense + sparse (BM25) search, reciprocal rank fusion, cross-encoder reranking, citation-backed AI responses.",
       "Three-stage recruiter evaluation pipeline (dense prescreen → skill match → LLM review) — shortlists top ~5% of candidates, cutting full rubric reviews by ~95%.",
       "Three-tier LLM fallback chain (Ollama → Gemini → Groq) for rate-limit resilience; Supabase auth + PostgreSQL backend for persistent hiring campaigns.",
       "Corroboration layer verifies weak resume claims against live GitHub repo content before upgrading evidence score — closes a keyword-stuffing gap.",
+      "OCR fallback (OCR.space) for scanned/image-only resumes below a text-extraction threshold — verified end-to-end against a real zero-text-layer PDF, not just unit-tested.",
+      "LRU cache dedupes repeated Cohere embedding calls by (model, input_type, text); job creation across all 3 intake paths is content-hash idempotent, returning the original job on a repeat submission instead of duplicating it.",
+      "Groundedness eval harness: for every requirement the rubric marks satisfied, checks the cited evidence snippet actually appears in the source resume — 15/15 requirements grounded, 0 hallucinated citations, in its first real run.",
     ],
     // First 3 (the ones ProjectCard shows as chips) specified directly —
     // "RAG (Retrieval-Augmented Generation)" and "Hybrid Search &
@@ -212,6 +215,7 @@ export const projects: Project[] = [
       "Groq",
       "Next.js 16",
       "Supabase",
+      "OCR",
     ],
     githubUrl: "https://github.com/Soban-2004/Job_Resume_Matcher",
     liveUrl: "https://ai-resume-job-matcher-rag-platform-soban-2004s-projects.vercel.app/",
@@ -224,12 +228,15 @@ export const projects: Project[] = [
     name: "Agentic RAG Customer Support Platform",
     period: "Nov 2025 – Jan 2026",
     description:
-      "Agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus — order status, refund tracking, human escalation via MCP tools. Pipeline: query → intent routing → hybrid Qdrant retrieval → MCP tool fallback → 7-scanner LLM Guard → grounded answer.",
+      "Agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus — order status, refund tracking, human escalation via MCP tools, optional photo attachment via a vision model. Pipeline: query → (optional) vision description → intent routing → hybrid Qdrant retrieval → MCP tool fallback → 7-scanner LLM Guard → grounded answer.",
     shortDescription: "An AI support agent that answers order and refund questions from a real FAQ corpus, escalating to a human when it can't.",
     highlights: [
       "Built on LlamaIndex: intent-routing planner, 5 integrated tools (FAQ search + 4 MCP tools), LiteLLM gateway with fallback across 3 models / 2 providers.",
       "LLM Guard guardrails (7 parallel scanners) cut latency from ~4.5s → ~1s.",
       "Validated via 25-scenario RAGAS evaluation; deployed as a Docker container on Render.",
+      "Vision support (Groq Llama 4 Scout): a customer can attach a photo of a damaged/defective item, described in plain text before the normal pipeline runs.",
+      "Every chat turn tagged in Langfuse with exactly how it resolved (cache hit, guardrail block, specific tool, plain chat, or error) via a new score_resolution_path() observability layer.",
+      "A new intent-classification eval suite (gold-labeled, all 5 intents) caught a live production incident — two of the LLM gateway's models silently deprecated by Groq — on its first run; fixed and verified 3 ways, including against the exact production configuration.",
     ],
     // Requested order was ["LangGraph / Agentic AI", "MCP (Model Context
     // Protocol)", "LlamaIndex"] — used "Agentic AI" alone rather than
@@ -240,7 +247,18 @@ export const projects: Project[] = [
     // to attribute a specific framework the project doesn't verifiably
     // use. "Agentic AI" as a category label is well-supported (it's
     // agentic RAG with tool-calling, per the project's own title).
-    techTags: ["Agentic AI", "MCP (Model Context Protocol)", "LlamaIndex", "LiteLLM", "Qdrant", "Docker", "LLM Guard", "RAGAS"],
+    techTags: [
+      "Agentic AI",
+      "MCP (Model Context Protocol)",
+      "LlamaIndex",
+      "LiteLLM",
+      "Qdrant",
+      "Docker",
+      "LLM Guard",
+      "RAGAS",
+      "Vision (Llama 4 Scout)",
+      "Langfuse",
+    ],
     githubUrl: "https://github.com/Soban-2004/Flipkart_faq_chatbot",
     liveUrl: "https://agentic-rag-customer-support-platform.onrender.com",
     headlineStat: { label: "Latency reduction", value: "4.5s → 1s" },
@@ -260,6 +278,8 @@ export const projects: Project[] = [
       "Call detail page: diarized transcript synced to an audio player, per-tag issue cards, full score version history.",
       "Contest/confirm/dismiss workflow — a dismissal triggers a live, versioned score recalculation (scores are appended, never overwritten).",
       "Live updates via Server-Sent Events — no polling, no manual reload.",
+      "A labeled eval harness (3 hand-scored transcript scenarios) caught a live production incident — two of three fallback-chain LLM models silently deprecated by their providers — on its first run; fixed and verified across 5 consecutive live runs.",
+      "Per-IP + global rate limiting on the one unauthenticated endpoint (upload); a new llm_call_logs table and admin-gated stats endpoint make LLM behavior queryable instead of guessed at; a 30-second TTL cache on the dashboards, invalidated explicitly on every contest/confirm/dismiss action.",
     ],
     // First 3 specified directly. "Speech-to-Text (Deepgram)" replaces
     // the old plain "Deepgram Nova-3" tag (same fact, this wording).

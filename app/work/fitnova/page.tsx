@@ -85,6 +85,10 @@ const DECISIONS = [
     q: "How is LLM output validated?",
     a: "The 3-layer chain above: Pydantic schema → RapidFuzz fuzzy match → Gemini semantic embeddings, escalating only when a cheaper check fails.",
   },
+  {
+    q: "Why rate-limit just the upload endpoint?",
+    a: "POST /api/upload is the one route in the app with no auth at all — a per-IP cooldown plus a global daily cap closes a real DoS/cost-drain hole there, not a hypothetical one, without adding friction anywhere auth already gates access.",
+  },
 ];
 
 const WHATS_NEXT = [
@@ -168,7 +172,7 @@ export default function FitNovaPage() {
       {/* 4. Real deployment gotchas */}
       <section className="mt-16">
         <h2 className="font-mono text-sm text-accent-soft">Real Deployment Gotchas</h2>
-        <p className="mt-4 text-muted">Three real ones hit during actual deployment, not a hypothetical list.</p>
+        <p className="mt-4 text-muted">Four real ones hit during actual deployment, not a hypothetical list.</p>
         <div className="mt-6">
           <GotchasList />
         </div>

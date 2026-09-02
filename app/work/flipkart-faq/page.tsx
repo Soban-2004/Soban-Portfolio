@@ -17,6 +17,11 @@ const project = projects.find((p) => p.id === "flipkart-faq")!;
 
 const PIPELINE: DiagramNode[] = [
   { id: "query", label: "Query received", detail: "Treated like a real customer support message, not a benchmark prompt." },
+  {
+    id: "vision",
+    label: "Vision (optional)",
+    detail: "If a photo is attached — e.g. a damaged item — Groq's Llama 4 Scout produces a factual description that folds into the message as plain-text context before anything else runs.",
+  },
   { id: "route", label: "Intent-routing planner", detail: "Decides whether this is a pure FAQ lookup, an order/refund status question, or something needing escalation." },
   { id: "vector-db", label: "Vector DB — Qdrant", detail: "Hybrid dense + BM25 search across the ~2,000-entry FAQ corpus." },
   { id: "tools", label: "MCP tool selection", detail: "If it isn't a pure FAQ match, one of 4 MCP tools is invoked instead — e.g. order status or refund tracking." },
@@ -60,11 +65,18 @@ export default function FlipkartFaqPage() {
         <h2 className="font-mono text-sm text-accent-soft">Overview</h2>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
           An agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus, built on LlamaIndex —
-          order status, refund tracking, and human escalation via MCP tools, not just FAQ lookup.
+          order status, refund tracking, and human escalation via MCP tools, not just FAQ lookup. A customer can
+          also attach a photo of a damaged or defective item; a vision-capable model (Groq&apos;s Llama 4 Scout)
+          describes it in plain text before the normal pipeline runs, so nothing downstream needed to change.
         </p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
           A LiteLLM gateway falls back across 3 models and 2 providers for resilience. Validated via a 25-scenario
           RAGAS evaluation and deployed as a Docker container on Render.
+        </p>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          Every chat turn is tagged in Langfuse with exactly how it was resolved — cache hit, guardrail block, a
+          specific tool call, plain chat, or error — so &quot;what fraction of turns hit a tool vs. the cache vs.
+          plain chat&quot; is answerable straight from the dashboard, not guessed at.
         </p>
       </section>
 
@@ -77,7 +89,27 @@ export default function FlipkartFaqPage() {
         </div>
       </section>
 
-      {/* 3. Tech stack */}
+      {/* 3. Real-world reliability */}
+      <section className="mt-16">
+        <h2 className="font-mono text-sm text-accent-soft">Real-World Reliability</h2>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          On Aug 16, Groq deprecated both models this app&apos;s LLM gateway depended on — its primary
+          (llama-3.3-70b-versatile) and its fallback (llama-3.1-8b-instant). Every call had been failing silently
+          for two weeks: the intent classifier fails open to a safe default rather than raising, so nothing
+          visibly broke in the meantime.
+        </p>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          Caught by a new intent-classification eval suite — a gold-labeled case set covering all five intents,
+          including a regression case tied to a real bug found earlier the same session — on its first real run.
+          Fixed by moving to Groq&apos;s recommended successors, reasoning models with different failure modes
+          than their predecessors, which needed automatic reasoning_effort/reasoning_format handling added to the
+          LLM gateway so every caller stays safe with zero per-call changes. Verified against the live API three
+          ways: the new intent suite (9/9), the existing tool-calling suite (9/9), and the exact configuration
+          Render runs in production — confirmed with real tool calls and correct answers, not just a passing test.
+        </p>
+      </section>
+
+      {/* 4. Tech stack */}
       <section className="mt-16 border-t border-surface-border pt-10">
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>

@@ -77,6 +77,19 @@ export default function ResumeMatcherPage() {
           A three-tier LLM fallback chain (Ollama → Gemini → Groq) keeps both flows working through rate limits;
           Supabase auth and PostgreSQL persist hiring campaigns across sessions.
         </p>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          A scanned or photographed resume — no text layer for the PDF parser to read — falls back to OCR
+          automatically once extracted text drops below a length threshold, verified end-to-end against a real
+          zero-text-layer PDF through the actual document-loading entry point, not just unit-tested in isolation.
+          An LRU cache also dedupes repeated Cohere embedding calls for identical text, and job creation across all
+          three intake paths is content-hash idempotent, so a repeat submission returns the original job instead
+          of starting a duplicate.
+        </p>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          A groundedness eval harness checks the one guarantee the whole pipeline is built around: for every
+          requirement the rubric marks satisfied, does the cited evidence snippet actually appear in the source
+          resume text? Run against a real resume, it evaluated 15 requirements with zero ungrounded citations.
+        </p>
       </section>
 
       {/* 2. Retrieval architecture */}

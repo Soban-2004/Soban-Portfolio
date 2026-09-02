@@ -58,6 +58,13 @@ AI Engineer with hands-on enterprise AI experience through a 6-month internship 
 *(Ollama, Gemini, and Groq are also used here — see the LLM fallback chain bullet above — the terse Tech: line above just didn't originally list them individually; the site's ProjectCard tags now include all three)*
 **Headline stat:** `~95%` fewer full rubric reviews needed
 
+**Recent additions (verified this round, mapped to a target job's skill checklist):**
+- **Caching:** `embed_texts()` now caches every Cohere embedding by `(model, input_type, text)` in a bounded LRU — a recruiter batch re-embedding the same JD requirement text against 50 candidates now embeds each distinct string once, not 50 times.
+- **Idempotency:** job creation across all 3 endpoints (job-seeker, guest demo, recruiter batch) hashes submitted content and dedupes a repeat within a short TTL, returning the original job instead of starting a duplicate.
+- **Observability:** logs are now JSON lines (parseable by `jq`/any aggregator); Sentry wired in behind an optional `SENTRY_DSN`, a genuine no-op until configured.
+- **OCR fallback:** PyMuPDF only reads a PDF's text layer, so a scanned/photographed resume used to silently extract to near-nothing. `document_loader` now detects that (extracted text below a length threshold) and falls back to OCR.space's hosted API — verified live against a real synthetic image-only PDF through the actual `load_document()` entry point, not just unit-tested.
+- **Eval harness (`backend/scripts/eval_harness.py`):** a direct, automatic groundedness/hallucination check needing zero hand-labeled data — for every requirement the rubric marks satisfied, does the cited evidence snippet actually appear in the source resume text? Run for real on `resume_1.pdf`: 15 requirements evaluated, 0 ungrounded citations. A `GOLDEN_SET` slot is scaffolded for real precision/recall once hand-labeled examples exist — that part is still open; be precise in an interview that this is a groundedness-check harness, not a full golden-set eval.
+
 ---
 
 ### 2. Agentic RAG Customer Support Platform (Flipkart FAQ)
@@ -71,6 +78,12 @@ AI Engineer with hands-on enterprise AI experience through a 6-month internship 
 
 **Tech:** LlamaIndex, MCP, LiteLLM, Qdrant, Docker, LLM Guard, RAGAS
 **Headline stat:** `4.5s → 1s` latency reduction
+
+**Recent additions (verified this round):**
+- **Intent-classification eval suite** extending the existing RAGAS harness (`src/eval/run_eval.py`) — a 4th suite, gold-labeled, covering all 5 intents, including a regression case tied to a real production bug (a session-referential meta-question like "what did I just ask" getting globally cached under the wrong intent). Proved its value immediately: caught a live incident on its first real run (next bullet).
+- **Live incident found + fixed:** Groq deprecated both models the LLM gateway depended on (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) on Aug 16 — every call had been failing and silently falling through the fallback chain for two weeks, undetected because the intent classifier fails open to a safe default rather than raising. Replaced both with Groq's recommended successors (`openai/gpt-oss-120b` / `openai/gpt-oss-20b` — reasoning models with different failure modes: a hidden reasoning trace can silently consume the whole completion budget and return empty content, or 400 outright under tool-calling). Added automatic `reasoning_effort`/`reasoning_format` handling in the LLM gateway so every caller gets safe behavior with zero per-call changes. Verified against the live API 3 ways: the new intent suite (9/9), the existing tool-calling suite (9/9), and the exact production config (`AGENT_TOOL_CALL_MODEL_KEY=fallback`) — confirmed with real tool calls and correct answers, not just a passing test.
+- **Agent trajectory analysis:** `score_resolution_path()` in `src/observability/tracing.py` tags every chat turn in Langfuse with exactly how it resolved — cache hit, guardrail block, a specific tool call, plain chat, or error — a queryable attribute that didn't exist before, even though Langfuse traces themselves already did.
+- **Multimodal (vision):** a customer can attach a photo of a damaged/defective item. A new `src/gateway/vision.py` sends it to Groq's Llama 4 Scout (natively multimodal), producing a factual description folded into the message as plain-text context before the normal guardrail → intent → agent pipeline runs — no other code needed to change. Wired into both authenticated chat and the public no-login demo. Validated against Groq's documented constraints (4MB base64 cap, JPEG/PNG/WebP only), not assumed limits.
 
 ---
 
@@ -96,6 +109,13 @@ An AI pipeline that ingests recorded sales calls, transcribes and diarizes them,
 - Durable audio storage as an additive second field (Backblaze B2), not a replacement for the local path already proven to work
 
 **Tech:** FastAPI (async), SQLAlchemy 2.0, Neon Postgres, Next.js 14 (App Router), TypeScript, Deepgram Nova-3, Groq/Gemini/Ollama, RapidFuzz, Server-Sent Events, Render + Vercel
+
+**Recent additions (verified this round):**
+- **Eval harness + live incident (the strongest story here):** `scripts/eval_issue_detection.py` runs 3 hand-written, hand-labeled transcript scenarios (a clean call, a high-pressure call, a compliance-violation call) through the real issue-detection pipeline and scores recall/false-positives against known-correct answers. On its very first run it caught both the Groq tier (`llama-3.3-70b-versatile`, deprecated by Groq 2026-08-16) and the Gemini tier (`gemini-2.0-flash`, retired) 404ing on every call in production, silently rescued by falling all the way through to the Ollama tier. Fixed both model configs, which surfaced a second bug — the reasoning-model replacement (`gpt-oss-20b`) needed a `reasoning_effort` parameter the pinned SDK didn't natively support, fixed via `extra_body` passthrough. Verified clean across 5 consecutive live runs.
+- **Rate limiting** (`services/rate_limit.py`): per-IP cooldown + global daily cap on `POST /api/upload`, the one endpoint with no auth at all — closes a real DoS/cost-drain hole, not a hypothetical one.
+- **Observability:** a new `llm_call_logs` table (real Alembic migration), an async `track_llm_call()` wrapper around every LLM call in the 3-pass analysis chain and the validation layer's semantic-similarity calls, and an admin-gated `GET /api/admin/llm-stats` endpoint — this is what turned "two dead models" from a guess into a queryable fact.
+- **Caching:** a 30-second TTL cache on the director/team/advisor dashboards (previously recomputed from scratch on every request), with explicit invalidation wired into the tag contest/confirm/dismiss actions so a team leader's action is never served stale.
+- Already present before this round, not new, but worth knowing cold for interviews: idempotency (`UNIQUE(source_system, external_id)`), the DB-backed worker queue (`SELECT...FOR UPDATE SKIP LOCKED`), retries/backoff, event-driven SSE pub-sub, and Human-in-the-loop (`contest.py`'s advisor-contests → team-leader-reviews → live-rescore state machine) — arguably the single strongest, most literal HITL example across either project.
 
 **What makes this stand out:** the README documents real production gotchas hit during actual deployment (a Python-version wheel-build failure on Render, a CORS misconfiguration, boto3's SigV2-vs-S3v4 presigned URL mismatch against Backblaze) and is explicit about what's simplified vs. real (e.g. advisor identity is asserted metadata, not a voiceprint; single-process SSE broadcaster). This kind of engineering honesty is rare and worth featuring prominently — possibly with a pull-quote from the "What's real vs. what's simplified" section.
 

@@ -29,6 +29,11 @@ export interface ProjectSlide {
   category: string;
   variant?: ProjectVariant;
   terminalLines?: string[];
+  // Swaps the card's content slot for MiniSimulation (a small looping
+  // canvas-style node/particle animation) instead of terminalLines or the
+  // stat-grid fallback — see ProjectCard.tsx. Mutually exclusive with
+  // terminalLines in practice (a slide only ever sets one).
+  simulation?: boolean;
 }
 
 const AUTOPLAY_MS = 6000;
@@ -465,6 +470,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
                   category={slide.category}
                   variant={slide.variant}
                   terminalLines={slide.terminalLines}
+                  simulation={slide.simulation}
                   skipReveal
                   onCaseStudyNavigate={startCaseStudyTransition}
                 />
@@ -619,6 +625,7 @@ function PhysicalTrack({
           category={current.category}
           variant={current.variant}
           terminalLines={current.terminalLines}
+          simulation={current.simulation}
           skipReveal
           onCaseStudyNavigate={onCaseStudyNavigate}
         />
@@ -632,14 +639,14 @@ function PhysicalTrack({
             className="pointer-events-none absolute inset-0"
             style={{ x: prevX, opacity: prevOpacity, scale: prevScale }}
           >
-            <ProjectCard project={prev.project} category={prev.category} variant={prev.variant} terminalLines={prev.terminalLines} skipReveal />
+            <ProjectCard project={prev.project} category={prev.category} variant={prev.variant} terminalLines={prev.terminalLines} simulation={prev.simulation} skipReveal />
           </motion.div>
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0"
             style={{ x: nextX, opacity: nextOpacity, scale: nextScale }}
           >
-            <ProjectCard project={next.project} category={next.category} variant={next.variant} terminalLines={next.terminalLines} skipReveal />
+            <ProjectCard project={next.project} category={next.category} variant={next.variant} terminalLines={next.terminalLines} simulation={next.simulation} skipReveal />
           </motion.div>
         </>
       )}

@@ -8,23 +8,27 @@ import { GitHubIcon } from "@/components/shared/BrandIcons";
 import { TagChip } from "@/components/shared/TagChip";
 import { TerminalPanel } from "@/components/shared/TerminalPanel";
 import { Reveal } from "@/components/shared/Reveal";
+import { MiniSimulation } from "@/components/projects/MiniSimulation";
 import type { Project } from "@/lib/content";
 
-export type ProjectVariant = "flagship" | "alert" | "info" | "standard";
+export type ProjectVariant = "flagship" | "alert" | "info" | "standard" | "secondary";
 
-// Four real project cards, four distinct border colors — pulled entirely
-// from tokens already in the palette (globals.css), not new colors: accent
-// (flagship, FitNova), critical (alert, Flipkart — the "latency" story),
-// success/cyan (info, AI Resume Matcher) and amber (standard, Cricket
-// Analysis). standard used to share the same near-invisible
-// border-surface-border as a "plain" default; now every card reads as its
-// own clearly bordered, clearly distinct block instead of two of them
-// blending into a generic gray.
+// Five real project cards now, five distinct border colors — pulled
+// entirely from tokens already in the palette (globals.css): accent
+// (flagship, AI Architect — the current lead project), violet (secondary,
+// FitNova — flagship until AI Architect took the lead slot; kept its own
+// distinct color rather than being demoted into sharing one), critical
+// (alert, Flipkart — the "latency" story), success/cyan (info, AI Resume
+// Matcher), and amber (standard, Cricket Analysis). standard used to share
+// the same near-invisible border-surface-border as a "plain" default; now
+// every card reads as its own clearly bordered, clearly distinct block
+// instead of blending into a generic gray.
 const CONTAINER: Record<ProjectVariant, string> = {
   flagship: "border-accent bg-accent text-background",
   alert: "border-critical bg-background",
   info: "border-success bg-background",
   standard: "border-amber bg-background",
+  secondary: "border-violet bg-background",
 };
 
 // Hover/active border + glow shadow now stay within each card's own color
@@ -36,6 +40,7 @@ const HOVER_BORDER: Record<ProjectVariant, string> = {
   alert: "hover:border-critical/70 active:border-critical/70",
   info: "hover:border-success/70 active:border-success/70",
   standard: "hover:border-amber/70 active:border-amber/70",
+  secondary: "hover:border-violet/70 active:border-violet/70",
 };
 
 const HOVER_SHADOW: Record<ProjectVariant, string> = {
@@ -43,6 +48,7 @@ const HOVER_SHADOW: Record<ProjectVariant, string> = {
   alert: "hover:shadow-[0_12px_36px_-12px_rgba(255,59,110,0.45)] active:shadow-[0_12px_36px_-12px_rgba(255,59,110,0.45)]",
   info: "hover:shadow-[0_12px_36px_-12px_rgba(77,184,217,0.45)] active:shadow-[0_12px_36px_-12px_rgba(77,184,217,0.45)]",
   standard: "hover:shadow-[0_12px_36px_-12px_rgba(224,166,62,0.45)] active:shadow-[0_12px_36px_-12px_rgba(224,166,62,0.45)]",
+  secondary: "hover:shadow-[0_12px_36px_-12px_rgba(167,139,250,0.45)] active:shadow-[0_12px_36px_-12px_rgba(167,139,250,0.45)]",
 };
 
 // Card-chip-only abbreviations — content.ts's techTags stay full-form
@@ -64,6 +70,7 @@ export function ProjectCard({
   category,
   variant = "standard",
   terminalLines,
+  simulation = false,
   className = "",
   skipReveal = false,
   onCaseStudyNavigate,
@@ -72,6 +79,11 @@ export function ProjectCard({
   category: string;
   variant?: ProjectVariant;
   terminalLines?: string[];
+  // Fixed-size looping node/particle diagram (MiniSimulation) instead of
+  // terminalLines or the stat-grid fallback — see that component's own
+  // comment. Checked ahead of terminalLines below since a slide only ever
+  // sets one of the two.
+  simulation?: boolean;
   className?: string;
   // The carousel (ProjectsSlider) already owns the enter/exit animation
   // for whichever slide is currently showing (AnimatePresence, scale +
@@ -221,22 +233,44 @@ export function ProjectCard({
         </button>
       )}
 
-      {terminalLines ? (
-        // No fixed height / overflow-hidden here, unlike the screenshot and
-        // stat-grid slots below — this one's content is real text (a
-        // title bar plus N log lines, one of which can be long enough to
-        // wrap), not a fixed-content grid or an aspect-ratio-boxed image,
-        // so a hard-capped box clips it instead of scaling it. Confirmed
-        // on the Agentic RAG card specifically: its 3rd line ("latency:
-        // 4.5s -> 1.0s (7 guardrail scanners)") pushed the panel's real
-        // height past the old shared h-28 cap by a few px at phone widths
-        // (the site's fluid --spacing token shrinks h-28 itself well below
-        // its nominal 112px down there, on top of that), silently cutting
-        // the bottom edge off. Sizing to natural content height instead
-        // just lets a 3-line terminal be taller than a 2-line one — the
-        // card's own min-height is a floor, not a ceiling, so a taller
-        // slot here doesn't break anything the way clipping did.
+      {simulation ? (
+        // No box at all here — asked for directly, twice over: first the
+        // TerminalPanel chrome came off, now the plain bordered/dark-bg
+        // div that replaced it is gone too. This sits straight on the
+        // card's own green background, which is why MiniSimulation's own
+        // colors are tuned for that (dark lines/hub/particles, not the
+        // light-on-dark palette a wrapping dark box would have called
+        // for) — see that file's own comment. Still sized explicitly
+        // (h-48/h-64, max-w-xl) since an SVG with h-full/w-full needs a
+        // parent with real dimensions to render into.
         <div className="mt-3 flex w-full justify-center sm:mt-3">
+          <div className="h-48 w-full max-w-xl sm:h-64">
+            <MiniSimulation />
+          </div>
+        </div>
+      ) : terminalLines ? (
+        // flex-1 + items-center: centers the terminal vertically in
+        // whatever space is actually left between the description above
+        // and the button row below (which stays pinned to the card's
+        // bottom via mt-auto) — previously this just sat right after the
+        // description with a fixed mt-3, so all the slack from a card
+        // that's taller than this content needs collected below it
+        // instead of splitting above/below evenly (visibly uneven on
+        // FitNova/Flipkart specifically, whose card is taller than a
+        // 2-3-line terminal needs). No fixed height / overflow-hidden
+        // here, unlike the screenshot and stat-grid slots below — this
+        // one's content is real text (a title bar plus N log lines, one
+        // of which can be long enough to wrap), not a fixed-content grid
+        // or an aspect-ratio-boxed image, so a hard-capped box clips it
+        // instead of scaling it. Confirmed on the Agentic RAG card
+        // specifically: its 3rd line ("latency: 4.5s -> 1.0s (7 guardrail
+        // scanners)") pushed the panel's real height past the old shared
+        // h-28 cap by a few px at phone widths, silently cutting the
+        // bottom edge off. Sizing to natural content height instead just
+        // lets a 3-line terminal be taller than a 2-line one — the card's
+        // own min-height is a floor, not a ceiling, so a taller slot here
+        // doesn't break anything the way clipping did.
+        <div className="mt-3 flex w-full flex-1 items-center justify-center sm:mt-3">
           <div className="w-full max-w-lg">
             <TerminalPanel title={`${project.id}.log`} accent={variant === "alert" ? "border-critical" : "border-surface-border"}>
               {terminalLines.map((line) => (

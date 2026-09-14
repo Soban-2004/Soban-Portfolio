@@ -44,6 +44,50 @@ AI Engineer with hands-on enterprise AI experience through a 6-month internship 
 
 ## 5. Featured Projects
 
+### 0. AI Architect — AI-Native System Design *(new flagship — added most recently)*
+**Aug 2026** *(confirmed by user)*
+[GitHub](https://github.com/Soban-2004/Archmind-AI-Architect) · [Live Demo](https://archmind-ai-architect.vercel.app)
+
+Describe a system in plain language and get back a real, validated system architecture — the AI never draws the
+diagram directly, it only emits structured mutation commands checked against real structural rules before
+anything reaches the canvas. Most "AI diagram" tools let the model directly generate a picture or a JSON blob
+rendered as-is, so it can propose something structurally broken and the tool just draws it anyway. This doesn't:
+the LLM only emits one of a handful of typed commands (add a node, connect two nodes, change a field), each
+validated (connectivity registry, schema checks, duplicate-node detection) before it can touch the architecture
+state — and that's the ONLY path in: a chat edit, a manual canvas drag-and-drop, and a reconstructed diagram from
+an imported real GitHub repo all produce the exact same validated commands.
+
+- Requirements interview (scale, budget, availability, consistency needs) → a grounded first design, never a
+  single LLM call guessing at a diagram.
+- A real cost & capacity model — ~30 component types across services, databases, queues, infrastructure, each
+  with versioned capacity/cost assumptions that scale with compute size, storage, and the actual engine named
+  (CockroachDB vs. Postgres, DynamoDB vs. Redis, priced differently).
+- Load & failure simulation — a traffic multiplier or a killed component drives a deterministic
+  capacity-propagation model showing what breaks, in what order, and why, animated live on the canvas.
+- A deterministic Analyzer scoring any design across 7 categories (scalability, reliability, security, cost,
+  observability, performance, maintainability), citing the exact facts behind every finding, with a one-click
+  "Fix it" back to the architect agent.
+- Import a real, existing repo (zip or GitHub URL) — a deterministic discovery pipeline extracts real,
+  source-attributed facts (routes, ORM models, SQL migrations, auth usage, real third-party API calls) across
+  Python and JS/TS, hands only those facts to the LLM, and checks every proposed component against real citations
+  before accepting it. Click a node to see the exact file and line that justified it.
+- Export a real starter kit — architecture docs, a dependency-ordered build plan, and a runnable
+  docker-compose.yml for every component with an honest local equivalent.
+- Guest mode with real per-visitor privacy — no login, but projects are genuinely only visible to the browser
+  that created them, via a private per-visitor identity, not just client-side hiding.
+
+**Tech:** FastAPI, Pydantic v2, PostgreSQL (Supabase) via asyncpg, Groq (primary LLM) + Gemini (structural review
+pass), Next.js, React, TypeScript, React Flow, Render (backend) + Vercel (frontend) + Supabase (database)
+**Testing:** 190+ backend tests (pytest) — mutation engine, capacity/cost model, ingestion pipeline, per-visitor
+isolation
+**Headline stat:** `190+` backend tests
+
+**Portfolio placement:** now the site's flagship/featured project, ahead of FitNova — technical depth (the
+validated-mutation-command architecture, live infra, 190+ tests) reads as comparable to or beyond FitNova's own.
+FitNova moved to a regular featured slot (its own new "secondary"/violet card color, not sharing one).
+
+---
+
 ### 1. AI Resume & Job Matcher — Full-Stack RAG Platform
 **Aug 2025 – Nov 2025 (Updated May 2026)**
 [GitHub](https://github.com/Soban-2004/Job_Resume_Matcher) · [Live Demo](https://ai-resume-job-matcher-rag-platform-soban-2004s-projects.vercel.app/)
@@ -119,7 +163,7 @@ An AI pipeline that ingests recorded sales calls, transcribes and diarizes them,
 
 **What makes this stand out:** the README documents real production gotchas hit during actual deployment (a Python-version wheel-build failure on Render, a CORS misconfiguration, boto3's SigV2-vs-S3v4 presigned URL mismatch against Backblaze) and is explicit about what's simplified vs. real (e.g. advisor identity is asserted metadata, not a voiceprint; single-process SSE broadcaster). This kind of engineering honesty is rare and worth featuring prominently — possibly with a pull-quote from the "What's real vs. what's simplified" section.
 
-**Portfolio note:** this is your strongest, most recent, most technically distinctive project. Strong candidate for the hero/featured project slot, possibly with an architecture diagram (the README has ready-made flowcharts you can adapt visually — call state machine, 3-layer validation flow, deployment topology).
+**Portfolio note:** was the site's flagship/hero project; AI Architect (§5 #0, added later) took that slot — comparable or greater technical depth, and more recent. FitNova stays a fully featured project with its own distinct card color (violet/"secondary"), just no longer leading the carousel. Has an architecture diagram already built from the README's own flowcharts (call state machine, 3-layer validation flow, deployment topology).
 
 ---
 

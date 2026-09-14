@@ -28,6 +28,11 @@
      pop against the lime (Commit Log reference) — a latency number, one
      project card border. Never more than that. */
   --critical: #ff3b6e;
+  /* A 5th project-card color, added when the carousel grew to 5 real
+     projects and needed a 5th distinct border — every other hue in the
+     palette (green/red/cyan/amber) was already spoken for. A clean violet
+     reads as "distinct" without fighting the accent green for attention. */
+  --violet: #a78bfa;
 
   --radius: 0.75rem;
 }
@@ -43,6 +48,7 @@
   --color-success: var(--success);
   --color-amber: var(--amber);
   --color-critical: var(--critical);
+  --color-violet: var(--violet);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
   --font-display: var(--font-bungee);

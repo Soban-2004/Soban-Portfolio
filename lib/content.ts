@@ -183,6 +183,57 @@ export const earlierExperience: EarlierExperience[] = [
 
 export const projects: Project[] = [
   {
+    // New flagship project as of this addition — see Projects.tsx for the
+    // slide ordering/variant that makes that visual (AI Architect now
+    // "flagship"/accent-green in the carousel, FitNova moved to the new
+    // "secondary"/violet variant rather than being demoted into sharing
+    // an existing color).
+    // period: confirmed by user — Aug 2026 (was a "2026"-only placeholder
+    // before that, since the source brief didn't supply a date range).
+    id: "ai-architect",
+    name: "AI Architect",
+    period: "Aug 2026",
+    description:
+      "AI-native system-design tool — describe what you're building and a requirements interview produces a real architecture: services, databases, queues, infrastructure, versioned, cost-estimated, and load-tested. Pipeline: chat / manual edit / GitHub import → one of a handful of typed mutation commands → connectivity, schema, and duplicate-node validation → the canvas renders deterministically from that validated state, never from raw LLM output.",
+    shortDescription:
+      "Describe a system in plain language and get a real, validated architecture back — the AI never draws the diagram directly.",
+    highlights: [
+      "Requirements interview → real architecture (scale, budget, availability, consistency needs) — never a single LLM call guessing at a diagram.",
+      "A real cost & capacity model across ~30 component types (services, databases, queues, infrastructure), each with versioned assumptions that scale with compute size, storage, and the actual engine named (CockroachDB vs. Postgres, DynamoDB vs. Redis, priced differently).",
+      "Load & failure simulation — pick a traffic multiplier or kill a component, and a deterministic capacity-propagation model shows what breaks, in what order, and why, animated live on the canvas.",
+      "A deterministic Analyzer scores any design across 7 categories (scalability, reliability, security, cost, observability, performance, maintainability), citing the exact facts behind every finding, with a one-click \"Fix it\" back to the architect agent.",
+      "Import a real, existing repo (zip or GitHub URL) — a deterministic discovery pipeline extracts source-attributed facts (routes, ORM models, SQL migrations, auth usage, real third-party API calls) across Python and JS/TS, and every proposed component is checked against real citations before being accepted. Click a node to see the exact file and line that justified it.",
+      "Export a real starter kit — architecture docs, a dependency-ordered build plan, and a runnable docker-compose.yml for every component with an honest local equivalent.",
+    ],
+    // First 3 (the card's own chip row) picked to signal what this
+    // actually is at a glance: the backend-AI infra (FastAPI, Groq) and
+    // the canvas technology (React Flow) that makes it visually distinct
+    // from a typical chat-only AI tool.
+    techTags: [
+      "FastAPI",
+      "Groq",
+      "React Flow",
+      "Pydantic v2",
+      "PostgreSQL (Supabase)",
+      "Gemini",
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Render",
+      "Vercel",
+    ],
+    githubUrl: "https://github.com/Soban-2004/Archmind-AI-Architect",
+    liveUrl: "https://archmind-ai-architect.vercel.app",
+    headlineStat: {
+      label: "Backend tests — mutation engine, cost model, ingestion, isolation",
+      value: "190+",
+      numericValue: 190,
+      suffix: "+",
+    },
+    featured: true,
+    caseStudyRoute: "/work/ai-architect",
+  },
+  {
     id: "resume-matcher",
     name: "AI Resume & Job Matcher",
     period: "Aug 2025 – Nov 2025 (Updated May 2026)",
@@ -497,10 +548,10 @@ export const impactSnapshot: ImpactStat[] = [
 export const techNodes: TechNode[] = [
   // Programming & Backend
   { id: "python", label: "Python", category: "backend", relatedProjectIds: ["cricket-analysis"] },
-  { id: "fastapi", label: "FastAPI", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova"] },
+  { id: "fastapi", label: "FastAPI", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova", "ai-architect"] },
   { id: "sql", label: "SQL", category: "backend", relatedProjectIds: [] },
   { id: "mysql", label: "MySQL", category: "backend", relatedProjectIds: [] },
-  { id: "postgresql", label: "PostgreSQL (Supabase)", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova"] },
+  { id: "postgresql", label: "PostgreSQL (Supabase)", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova", "ai-architect"] },
 
   // LLM & Agentic AI
   { id: "langchain", label: "LangChain", category: "llm-agentic", relatedProjectIds: [] },
@@ -524,10 +575,15 @@ export const techNodes: TechNode[] = [
   // LLMOps & Evaluation
   { id: "litellm", label: "LiteLLM", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
   { id: "llm-guard", label: "LLM Guard", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
-  { id: "langfuse", label: "Langfuse", category: "llmops", relatedProjectIds: [] },
+  { id: "langfuse", label: "Langfuse", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
+  // Added when AI Architect's brief named Gemini as its structural-review
+  // pass — at that point genuinely evidenced across 3 projects' own
+  // Tech: lines (fitnova, resume-matcher, ai-architect), not just one,
+  // so worth its own node rather than staying untracked.
+  { id: "gemini", label: "Gemini", category: "llmops", relatedProjectIds: ["fitnova", "resume-matcher", "ai-architect"] },
   { id: "ragas", label: "RAGAS", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
   { id: "openrouter", label: "OpenRouter", category: "llmops", relatedProjectIds: [] },
-  { id: "groq", label: "Groq API", category: "llmops", relatedProjectIds: ["fitnova"] },
+  { id: "groq", label: "Groq API", category: "llmops", relatedProjectIds: ["fitnova", "ai-architect"] },
   { id: "openai-api", label: "OpenAI API", category: "llmops", relatedProjectIds: [] },
 
   // Machine Learning

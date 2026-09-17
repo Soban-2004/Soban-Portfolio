@@ -89,6 +89,32 @@ const DECISIONS = [
     q: "Why rate-limit just the upload endpoint?",
     a: "POST /api/upload is the one route in the app with no auth at all — a per-IP cooldown plus a global daily cap closes a real DoS/cost-drain hole there, not a hypothetical one, without adding friction anywhere auth already gates access.",
   },
+  {
+    q: "Why a WebSocket for live coaching, when the rest of the app is SSE?",
+    a: "Live coaching needs the advisor's mic streamed up to Deepgram in real time, not just a one-way push down to the client — a genuinely bidirectional stream, unlike the dashboards' server→client-only updates, so it earns the extra complexity SSE doesn't need elsewhere in the app.",
+  },
+  {
+    q: "Why does the Voice Intake Agent need barge-in?",
+    a: "A caller interrupting mid-reply is normal conversational behavior — an agent that keeps talking over them reads as broken, not just impolite, so it has to stop the moment it detects the caller speaking.",
+  },
+];
+
+const PLATFORM_EXPANSION = [
+  {
+    label: "Live Call Coaching",
+    detail:
+      "A real-time companion for a call already happening — streams the advisor's mic to Deepgram's live streaming API over a WebSocket and surfaces short coaching nudges as the conversation unfolds, instead of only scoring after the fact. When the session ends, it's persisted and scored through the exact same pipeline as an uploaded recording.",
+  },
+  {
+    label: "Voice Intake Agent",
+    detail:
+      "An AI that runs its own qualification calls: listens, decides what to say via an LLM, and speaks the reply back with Cartesia TTS, including barge-in (it stops talking if the caller interrupts). When the call ends, it extracts structured lead data — name, goal, health notes, availability, confirmed time — into a trackable Lead, a real hand-off rather than just a transcript.",
+  },
+  {
+    label: "Leads Pipeline",
+    detail:
+      "Every lead the voice agent creates is assignable to a human advisor and tracked through New → Assigned → Contacted → Trial Booked, connecting the AI's qualification call to the human follow-up it hands off to.",
+  },
 ];
 
 const WHATS_NEXT = [
@@ -143,6 +169,27 @@ export default function FitNovaPage() {
           Built at production-level care, not as a demo: 35 real, integration-style tests against a real
           database, real error handling, real failure-path recovery.
         </p>
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
+          What shipped as a single-purpose scoring tool is now a three-surface platform: analyze past calls,
+          coach a call as it happens, and run AI-led intake calls that hand off to a human — plus the
+          telemetry and rate-limiting a real deployed service needs.
+        </p>
+      </section>
+
+      {/* 1.5 Platform expansion */}
+      <section className="mt-16">
+        <h2 className="font-mono text-sm text-accent-soft">Platform Expansion</h2>
+        <p className="mt-4 text-muted">
+          Three new product surfaces on top of the core scoring pipeline above.
+        </p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {PLATFORM_EXPANSION.map((p) => (
+            <div key={p.label} className="rounded-lg border border-surface-border bg-surface/60 p-4">
+              <p className="font-medium text-foreground">{p.label}</p>
+              <p className="mt-1.5 text-pretty text-sm text-muted">{p.detail}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* 2. Architecture */}

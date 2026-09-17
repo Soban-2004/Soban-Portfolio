@@ -17,6 +17,7 @@ const cards: ExperienceCardData[] = [
     period: experience.period,
     title: experience.title,
     company: experience.company,
+    logo: experience.logo,
     location: experience.location,
     bullets: experience.bullets,
     tags: EXPERIENCE_TECH,

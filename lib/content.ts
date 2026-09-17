@@ -139,6 +139,11 @@ export const about = {
 export const experience = {
   title: "AI Engineering Intern",
   company: "Drivestream",
+  // Drivestream's own "three diamond" mark — pulled from their site's own
+  // favicon reference (drivestream.com/hubfs/drivestream-three-diamond.png),
+  // not redrawn or invented. Red-on-transparent, so ExperienceCard renders
+  // it inside a light chip rather than straight on the card's dark bg.
+  logo: { src: "/logos/drivestream.png", width: 4495, height: 5045, alt: "Drivestream logo" },
   location: "Chennai, India",
   period: "Jan 2026 – Jul 2026",
   bullets: [
@@ -321,16 +326,20 @@ export const projects: Project[] = [
     name: "FitNova — AI Sales-Call Intelligence System",
     period: "Jul 2026 – Aug 2026",
     description:
-      "An AI pipeline that ingests recorded sales calls, transcribes and diarizes them, runs a 3-pass LLM analysis, computes a deterministic score, and surfaces it all through director/team-leader/advisor dashboards with a live contest-and-review workflow. Built at production-level care, not as a demo.",
-    shortDescription: "AI that transcribes and scores real sales calls, then surfaces the results on live team dashboards.",
+      "A call-intelligence platform, not just a scoring pipeline: recorded sales calls are transcribed, diarized, run through a 3-pass LLM analysis, and deterministically scored on director/team-leader/advisor dashboards — plus a real-time coaching companion for calls in progress, and an AI voice agent that runs its own qualification calls and hands off structured leads to a human pipeline. Built at production-level care, not as a demo.",
+    shortDescription: "AI that transcribes and scores real sales calls, coaches them live, and runs its own AI qualification calls — with the results surfaced on live team dashboards.",
     highlights: [
       "Director / Team Leader / Advisor dashboards with score-trend charts (4/8/12-week ranges).",
       "Filterable, paginated, URL-driven call log with shareable filtered views.",
       "Call detail page: diarized transcript synced to an audio player, per-tag issue cards, full score version history.",
       "Contest/confirm/dismiss workflow — a dismissal triggers a live, versioned score recalculation (scores are appended, never overwritten).",
       "Live updates via Server-Sent Events — no polling, no manual reload.",
+      "Live Call Coaching — streams the advisor's mic to Deepgram's live streaming API over a WebSocket and surfaces short coaching nudges as the call happens; the session is persisted and scored through the same pipeline as an uploaded recording once it ends.",
+      "Voice Intake Agent — an AI that runs its own qualification calls: decides what to say via an LLM, speaks the reply with Cartesia TTS (with barge-in if the caller interrupts), then extracts structured lead data (name, goal, health notes, availability, confirmed time) into a trackable Lead.",
+      "Leads pipeline — every lead the voice agent creates is assignable to a human advisor and tracked New → Assigned → Contacted → Trial Booked.",
       "A labeled eval harness (3 hand-scored transcript scenarios) caught a live production incident — two of three fallback-chain LLM models silently deprecated by their providers — on its first run; fixed and verified across 5 consecutive live runs.",
-      "Per-IP + global rate limiting on the one unauthenticated endpoint (upload); a new llm_call_logs table and admin-gated stats endpoint make LLM behavior queryable instead of guessed at; a 30-second TTL cache on the dashboards, invalidated explicitly on every contest/confirm/dismiss action.",
+      "Per-IP + global rate limiting on the one unauthenticated, state-mutating endpoint (upload); per-LLM-call telemetry (latency, outcome, which fallback-chain provider served the call) persisted so it survives a restart, with an admin endpoint to query it; short-TTL in-memory caching on the dashboard aggregation endpoints, explicitly invalidated the moment a score changes underneath them.",
+      "A full UI/UX design pass — a colorful, dark-mode-capable design system with identity-based color coding for teams/advisors/tags kept strictly separate from status/severity colors, dense-table hover-lift interactions with inline magnitude bars and filter chips, a Web-Audio-driven level meter on the live call screen, and a color-displacement live-state indicator in place of a blinking dot.",
     ],
     // First 3 specified directly. "Speech-to-Text (Deepgram)" replaces
     // the old plain "Deepgram Nova-3" tag (same fact, this wording).
@@ -346,18 +355,22 @@ export const projects: Project[] = [
     // evidences it.
     techTags: [
       "Speech-to-Text (Deepgram)",
+      "Deepgram Live Streaming (WebSocket)",
+      "Text-to-Speech (Cartesia)",
       "LLM Evaluation / Output Validation",
       "Prompt Engineering",
       "Groq",
       "Gemini",
       "Ollama Cloud",
       "FastAPI (async)",
+      "WebSockets",
       "SQLAlchemy 2.0",
       "Neon Postgres",
       "Next.js 14",
       "TypeScript",
       "Tailwind",
       "Recharts",
+      "Web Audio API",
       "RapidFuzz",
       "Server-Sent Events",
       "Render",
@@ -552,6 +565,10 @@ export const techNodes: TechNode[] = [
   { id: "sql", label: "SQL", category: "backend", relatedProjectIds: [] },
   { id: "mysql", label: "MySQL", category: "backend", relatedProjectIds: [] },
   { id: "postgresql", label: "PostgreSQL (Supabase)", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova", "ai-architect"] },
+  // Added with FitNova's Live Call Coaching update — the mic stream to
+  // Deepgram's live API runs over a WebSocket, not the REST calls the
+  // rest of the pipeline uses.
+  { id: "websockets", label: "WebSockets", category: "backend", relatedProjectIds: ["fitnova"] },
 
   // LLM & Agentic AI
   { id: "langchain", label: "LangChain", category: "llm-agentic", relatedProjectIds: [] },
@@ -565,6 +582,9 @@ export const techNodes: TechNode[] = [
   { id: "deepgram", label: "Deepgram Nova-3 (STT)", category: "voice", relatedProjectIds: ["fitnova"] },
   { id: "diarization", label: "Speaker Diarization", category: "voice", relatedProjectIds: ["fitnova"] },
   { id: "multilingual-audio", label: "Multilingual / Code-Switched Audio", category: "voice", relatedProjectIds: [] },
+  // Added with FitNova's Live Call Coaching (Deepgram live streaming) and
+  // Voice Intake Agent (Cartesia TTS reply + barge-in) update.
+  { id: "cartesia", label: "Cartesia (TTS)", category: "voice", relatedProjectIds: ["fitnova"] },
 
   // Vector DB & Retrieval
   { id: "qdrant", label: "Qdrant", category: "vector-db", relatedProjectIds: ["resume-matcher", "flipkart-faq"] },

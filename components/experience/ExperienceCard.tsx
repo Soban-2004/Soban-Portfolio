@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { TagChip } from "@/components/shared/TagChip";
 import { highlightNumbers } from "@/lib/highlightNumbers";
 
@@ -7,6 +8,10 @@ export interface ExperienceCardData {
   period: string;
   title: string;
   company: string;
+  // Optional — only Drivestream has one so far. Most brand marks assume a
+  // light background, so this always renders inside its own light chip
+  // (see the logo block below) rather than straight on the card's dark bg.
+  logo?: { src: string; width: number; height: number; alt: string };
   location?: string;
   bullets: string[];
   tags: string[];
@@ -36,16 +41,34 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
           : "border-surface-border shadow-[4px_4px_0_0_rgba(232,240,230,0.08)]"
       } ${className}`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p className="font-mono text-xs text-muted">{data.period}</p>
-          <h3 className={`mt-1 uppercase text-foreground ${isPrimary ? "text-lg sm:text-2xl" : "text-base sm:text-lg"}`}>
-            {data.title}
-          </h3>
-          <p className={`text-sm ${isPrimary ? "sm:text-base text-muted" : "text-muted"}`}>
-            @ {data.company}
-            {data.location ? ` · ${data.location}` : ""}
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-start gap-3">
+          {data.logo && (
+            // A light chip behind the mark, not the card's own dark
+            // surface — Drivestream's logo (like most brand marks) assumes
+            // a light background and reads as a near-invisible dark shape
+            // without one.
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-foreground/95 p-1.5 sm:h-11 sm:w-11">
+              <Image
+                src={data.logo.src}
+                alt={data.logo.alt}
+                width={data.logo.width}
+                height={data.logo.height}
+                className="h-full w-full object-contain"
+                sizes="44px"
+              />
+            </div>
+          )}
+          <div>
+            <p className="font-mono text-xs text-muted">{data.period}</p>
+            <h3 className={`mt-1 uppercase text-foreground ${isPrimary ? "text-lg sm:text-2xl" : "text-base sm:text-lg"}`}>
+              {data.title}
+            </h3>
+            <p className={`text-sm ${isPrimary ? "sm:text-base text-muted" : "text-muted"}`}>
+              @ {data.company}
+              {data.location ? ` · ${data.location}` : ""}
+            </p>
+          </div>
         </div>
         <span className="rounded-md border border-surface-border px-2.5 py-1 font-mono text-[10px] font-medium text-muted">
           {data.badge}

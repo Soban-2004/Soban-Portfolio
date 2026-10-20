@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { EASE_DECELERATE } from "@/lib/motion-tokens";
 
 const LINKS = [
-  { href: "#stats", label: "Stats" },
-  { href: "#experience", label: "History" },
-  { href: "#work", label: "Projects" },
-  { href: "#open-source", label: "OSS" },
-  { href: "#research", label: "Research" },
-  { href: "#credentials", label: "Certs" },
-  { href: "#skills", label: "Skills" },
+  { href: "/#stats", section: "#stats", label: "Stats" },
+  { href: "/#experience", section: "#experience", label: "History" },
+  { href: "/#work", section: "#work", label: "Projects" },
+  { href: "/#open-source", section: "#open-source", label: "OSS" },
+  { href: "/#research", section: "#research", label: "Research" },
+  { href: "/#credentials", section: "#credentials", label: "Certs" },
+  { href: "/#skills", section: "#skills", label: "Skills" },
 ];
 
 // Mobile menu open/close timing — a deliberate "digital system activation"
@@ -25,6 +26,15 @@ const LINKS = [
 // separate, already-tuned durations regardless of this.
 const OPEN_MS = 700;
 const CLOSE_MS = 480;
+
+const subscribeToReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const getServerReducedMotion = () => false;
 
 // The clip-path's origin point — roughly under the hamburger (which sits
 // at the nav's left edge, half its own 44px width in), so the panel visibly
@@ -105,8 +115,7 @@ export function Nav() {
   // playing its closing animation) for a beat after mobileOpen already
   // flips back to false, instead of vanishing instantly.
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [phase, setPhase] = useState<"closed" | "opening" | "open" | "closing">("closed");
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = useSyncExternalStore(subscribeToReducedMotion, getReducedMotion, getServerReducedMotion);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   // Skips the initial mount below — mobileOpen always starts false, so
@@ -115,35 +124,6 @@ export function Nav() {
   // without checking) and briefly mount a closing-styled panel that was
   // never actually open. Ref, not state, since it shouldn't itself cause
   // a re-render.
-  const didMountRef = useRef(false);
-
-  useEffect(() => {
-    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      setPhase(mobileOpen ? "open" : "closed");
-      return;
-    }
-    if (mobileOpen) {
-      if (reducedMotion) {
-        setPhase("open");
-        return;
-      }
-      setPhase("opening");
-      const t = window.setTimeout(() => setPhase("open"), OPEN_MS);
-      return () => window.clearTimeout(t);
-    }
-    if (reducedMotion) {
-      setPhase("closed");
-      return;
-    }
-    setPhase("closing");
-    const t = window.setTimeout(() => setPhase("closed"), CLOSE_MS);
-    return () => window.clearTimeout(t);
-  }, [mobileOpen, reducedMotion]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -178,10 +158,16 @@ export function Nav() {
     document.body.style.overflow = "hidden";
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    const desktopQuery = window.matchMedia("(min-width: 768px)");
+    const onDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setMobileOpen(false);
+    };
+    desktopQuery.addEventListener("change", onDesktop);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      desktopQuery.removeEventListener("change", onDesktop);
     };
   }, [mobileOpen]);
 
@@ -198,7 +184,7 @@ export function Nav() {
     // explicitly clearing `active` when one of them is what's intersecting,
     // fixes that — the nav now correctly shows nothing highlighted while
     // you're at the very top of the page.
-    const linkIds = LINKS.map((l) => l.href.slice(1));
+    const linkIds = LINKS.map((l) => l.section.slice(1));
     const ids = ["top", "about", ...linkIds, "contact"];
     const sections = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
     if (sections.length === 0) return;
@@ -240,7 +226,7 @@ export function Nav() {
           <button
             ref={menuButtonRef}
             type="button"
-            className={`flex h-11 w-11 items-center justify-center transition-colors duration-200 md:hidden ${
+            className={`flex h-[44px] w-[44px] items-center justify-center transition-colors duration-200 md:hidden ${
               mobileOpen ? "text-accent" : "text-foreground"
             }`}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -256,27 +242,27 @@ export function Nav() {
               the "//" and "SOBAN" trade colors on hover/tap rather than one
               plain color shift, so the logo itself feels alive/clickable
               instead of just sitting there as a static label. */}
-          <a href="#top" className="group font-mono text-sm font-bold">
+          <Link href="/#top" className="group inline-flex min-h-[44px] items-center px-1 font-mono text-sm font-bold">
             <span className="text-accent transition-colors duration-150 group-hover:text-foreground group-active:text-foreground">
-              //
+              {"//"}
             </span>{" "}
             <span className="text-foreground transition-colors duration-150 group-hover:text-accent group-active:text-accent">
               SOBAN
             </span>
-          </a>
+          </Link>
         </div>
 
         <ul className="hidden items-center gap-6 md:flex">
           {LINKS.map((link) => (
             <li key={link.href}>
-              <a
+              <Link
                 href={link.href}
                 className={`font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 hover:text-foreground ${
-                  active === link.href ? "text-foreground" : "text-muted"
+                  active === link.section ? "text-foreground" : "text-muted"
                 }`}
               >
                 {link.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -289,15 +275,16 @@ export function Nav() {
             in an earlier round specifically so this had somewhere to sit
             on the right, the way most mobile app bars pair a menu toggle
             with a primary action. */}
-        <a
-          href="#contact"
-          className="invert-static-burst flex min-h-9 items-center rounded-md border-2 border-accent bg-accent px-3 py-1.5 font-mono text-xs font-bold text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:px-4"
+        <Link
+          href="/#contact"
+          className="invert-static-burst flex min-h-[44px] items-center rounded-md border-2 border-accent bg-accent px-3 py-1.5 font-mono text-xs font-bold text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:px-4"
         >
           HIRE()
-        </a>
+        </Link>
       </nav>
 
-      {phase !== "closed" && (
+      <AnimatePresence>
+      {mobileOpen && (
         <motion.div
           ref={menuRef}
           // max-h + its own scroll, since body scroll is now locked while
@@ -309,7 +296,8 @@ export function Nav() {
           // positions itself against.
           className="relative max-h-[calc(100vh-4.5rem)] overflow-x-hidden overflow-y-auto overscroll-contain border-t border-surface-border bg-background/95 backdrop-blur-md md:hidden"
           initial="closed"
-          animate={phase === "closing" ? "closed" : "open"}
+          animate="open"
+          exit="closed"
           variants={{
             // circle(...% at PANEL_ANCHOR): a reveal mask centered right
             // under the hamburger, growing from nothing to well past the
@@ -326,19 +314,20 @@ export function Nav() {
             },
           }}
         >
-          {!reducedMotion && (phase === "opening" || phase === "closing") && (
+          {!reducedMotion && (
             // key={phase}: "opening" and "closing" are two different
             // strings, so switching between them forces React to unmount
             // and remount this — guarantees a fresh initial->animate run
             // every time the menu opens or closes, rather than leaving it
             // to the (already-reliable, but less explicit) fact that this
             // element only ever exists during these two phases anyway.
-            <NavScanline key={phase} reverse={phase === "closing"} />
+            <NavScanline reverse={false} />
           )}
           <motion.ul
             className="flex flex-col px-6 py-4"
             initial="closed"
-            animate={phase === "closing" ? "closed" : "open"}
+            animate="open"
+            exit="closed"
             variants={{
               closed: { transition: reducedMotion ? {} : { staggerChildren: 0.02, staggerDirection: -1 } },
               open: {
@@ -346,7 +335,7 @@ export function Nav() {
               },
             }}
           >
-            {[...LINKS, { href: "#about", label: "About" }, { href: "#contact", label: "Contact" }].map((link) => (
+            {[...LINKS, { href: "/#about", section: "#about", label: "About" }, { href: "/#contact", section: "#contact", label: "Contact" }].map((link) => (
               <motion.li
                 key={link.href}
                 variants={{
@@ -362,18 +351,19 @@ export function Nav() {
                   },
                 }}
               >
-                <a
+                <Link
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block min-h-11 py-3 font-mono text-sm font-bold uppercase text-foreground"
+                  className="block min-h-[44px] py-3 font-mono text-sm font-bold uppercase text-foreground"
                 >
                   {link.label}
-                </a>
+                </Link>
               </motion.li>
             ))}
           </motion.ul>
         </motion.div>
       )}
+      </AnimatePresence>
     </header>
   );
 }

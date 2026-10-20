@@ -7,7 +7,6 @@ import { Nav } from "@/components/nav/Nav";
 import { Footer } from "@/components/sections/Footer";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { AmbientBackground } from "@/components/shared/AmbientBackground";
-import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { TouchActivate } from "@/components/shared/TouchActivate";
 import { identity } from "@/lib/content";
 
@@ -79,14 +78,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${jetbrainsMono.variable} ${bungee.variable} ${pressStart2P.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LoadingScreen />
         <AmbientBackground />
         <TouchActivate />
-        <a href="#top" className="skip-link">
+        <a href="#main-content" className="skip-link">
           Skip to content
         </a>
         <Nav />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+          {children}
+        </main>
         <Footer />
         <CommandPalette />
         <Script

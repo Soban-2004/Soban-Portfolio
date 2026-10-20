@@ -1,12 +1,13 @@
+import Link from "next/link";
 import { NodeMark } from "@/components/shared/NodeMark";
 import { GitHubIcon, LinkedInIcon } from "@/components/shared/BrandIcons";
 import { identity } from "@/lib/content";
 
 const FOOTER_LINKS = [
-  { href: "#stats", label: "Stats" },
-  { href: "#work", label: "Projects" },
-  { href: "#open-source", label: "OSS" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#stats", label: "Stats" },
+  { href: "/#work", label: "Projects" },
+  { href: "/#open-source", label: "OSS" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export function Footer() {
@@ -17,7 +18,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2 font-mono text-sm font-bold text-accent">
               <NodeMark className="h-4 w-4" />
-              // <span className="text-foreground">SOBAN</span>
+              {"//"} <span className="text-foreground">SOBAN</span>
             </div>
             <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted sm:mt-2">
               Grounded AI engineering. Systems that verify before they act.
@@ -27,12 +28,12 @@ export function Footer() {
           <ul className="flex flex-wrap gap-4">
             {FOOTER_LINKS.map((link) => (
               <li key={link.href}>
-                <a
+                <Link
                   href={link.href}
-                  className="font-mono text-xs uppercase tracking-wide text-muted transition-colors duration-150 hover:text-foreground"
+                  className="inline-flex min-h-[44px] items-center font-mono text-xs uppercase tracking-wide text-muted transition-colors duration-150 hover:text-foreground"
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -41,10 +42,10 @@ export function Footer() {
         <div className="mt-3 flex flex-col items-center justify-between gap-2 border-t border-surface-border pt-3 sm:mt-8 sm:flex-row sm:gap-3 sm:pt-6">
           <p className="font-mono text-xs text-muted/60">&copy; {new Date().getFullYear()} {identity.name}. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <a href={identity.github} aria-label="GitHub" className="text-muted transition-colors duration-150 hover:text-foreground">
+            <a href={identity.github} aria-label="GitHub" className="flex h-[44px] w-[44px] items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-accent/10 hover:text-foreground">
               <GitHubIcon size={16} />
             </a>
-            <a href={identity.linkedin} aria-label="LinkedIn" className="text-muted transition-colors duration-150 hover:text-foreground">
+            <a href={identity.linkedin} aria-label="LinkedIn" className="flex h-[44px] w-[44px] items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-accent/10 hover:text-foreground">
               <LinkedInIcon size={16} />
             </a>
             <span className="font-mono text-xs text-muted/40">exit 0</span>

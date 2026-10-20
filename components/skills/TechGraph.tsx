@@ -5,7 +5,7 @@
 // projects used it, grounded in profile.md — never a claim not backed by a
 // project's own tech line.
 
-import { useEffect, useState, type MouseEvent, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type FocusEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { techNodes, techCategoryLabels, projects, type TechCategory } from "@/lib/content";
 
@@ -33,6 +33,18 @@ interface PopoverPos {
 export function TechGraph() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [pos, setPos] = useState<PopoverPos | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
+  const cancelClose = () => {
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+  };
+
+  const scheduleClose = (id: string) => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => deactivate(id), 140);
+  };
 
   // Computes the popover's on-screen position from the node button's own
   // bounding rect, clamped so it can never bleed past the left/right
@@ -50,6 +62,7 @@ export function TechGraph() {
   // from the real trigger position, clamped to the viewport, has nowhere
   // left to bleed from in the first place.
   const activate = (id: string, target: HTMLElement) => {
+    cancelClose();
     const rect = target.getBoundingClientRect();
     const nodeCenterX = rect.left + rect.width / 2;
     const left = Math.min(
@@ -76,8 +89,15 @@ export function TechGraph() {
   useEffect(() => {
     if (!activeId) return;
     const onScroll = () => setActiveId(null);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActiveId(null);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [activeId]);
 
   return (
@@ -104,10 +124,15 @@ export function TechGraph() {
                       key={node.id}
                       type="button"
                       aria-pressed={isActive}
+                      aria-expanded={isActive}
+                      aria-controls={isActive ? "tech-project-popover" : undefined}
                       onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => activate(node.id, e.currentTarget)}
-                      onMouseLeave={() => deactivate(node.id)}
+                      onMouseLeave={() => scheduleClose(node.id)}
                       onFocus={(e: FocusEvent<HTMLButtonElement>) => activate(node.id, e.currentTarget)}
-                      onBlur={() => deactivate(node.id)}
+                      onBlur={(event) => {
+                        if (popoverRef.current?.contains(event.relatedTarget as Node | null)) return;
+                        scheduleClose(node.id);
+                      }}
                       // No onClick here (there was one, toggling active on
                       // click) — a tap on a native <button> fires a focus
                       // event before the click does, so onFocus had already
@@ -120,7 +145,7 @@ export function TechGraph() {
                       // onFocus/onBlur alone already cover touch the same
                       // way onMouseEnter/onMouseLeave cover a mouse — no
                       // separate click handling needed.
-                      className={`min-h-11 rounded-md border px-3.5 py-2 font-mono text-xs transition-all duration-200 ${
+                      className={`min-h-[44px] rounded-md border px-3.5 py-2 font-mono text-xs transition-[color,background-color,border-color,box-shadow,transform] duration-200 ${
                         isActive
                           ? "scale-105 border-accent bg-accent/15 text-accent-soft shadow-[0_0_16px_-2px_rgba(62,207,142,0.55)]"
                           : activeId
@@ -143,11 +168,19 @@ export function TechGraph() {
       <AnimatePresence>
         {activeNode && pos && (
           <motion.div
+            ref={popoverRef}
             initial={{ opacity: 0, y: 4, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            role="tooltip"
+            id="tech-project-popover"
+            role="dialog"
+            aria-label={`${activeNode.label} project usage`}
+            onMouseEnter={cancelClose}
+            onMouseLeave={() => deactivate(activeNode.id)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) deactivate(activeNode.id);
+            }}
             style={{ left: pos.left, top: pos.top }}
             // w-[224px] (a literal pixel value), not w-56 — w-56 resolves
             // through Tailwind's fluid --spacing scale (see globals.css)

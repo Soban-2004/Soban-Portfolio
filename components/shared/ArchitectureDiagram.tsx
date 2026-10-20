@@ -42,7 +42,7 @@ export function ArchitectureDiagram({ nodes }: { nodes: DiagramNode[] }) {
                 initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.6 }}
                 animate={inView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.3, delay: shouldAnimate ? i * 0.15 : 0, ease: [0.16, 1, 0.3, 1] }}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 font-mono text-xs transition-colors duration-150 ${
+                className={`flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full border-2 font-mono text-xs transition-colors duration-150 ${
                   isActive ? "border-accent bg-accent/20 text-accent-soft" : "border-surface-border bg-surface text-muted"
                 }`}
               >
@@ -72,7 +72,7 @@ export function ArchitectureDiagram({ nodes }: { nodes: DiagramNode[] }) {
                 onMouseLeave={() => setActiveId((cur) => (cur === node.id ? null : cur))}
                 onFocus={() => setActiveId(node.id)}
                 onClick={() => setActiveId((cur) => (cur === node.id ? null : node.id))}
-                className="min-h-11 text-left"
+                className="min-h-[44px] text-left"
               >
                 <p className="font-mono text-sm font-medium text-foreground">{node.label}</p>
               </button>

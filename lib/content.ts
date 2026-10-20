@@ -189,26 +189,26 @@ export const earlierExperience: EarlierExperience[] = [
 export const projects: Project[] = [
   {
     // New flagship project as of this addition — see Projects.tsx for the
-    // slide ordering/variant that makes that visual (AI Architect now
+    // slide ordering/variant that makes that visual (ArchMind now
     // "flagship"/accent-green in the carousel, FitNova moved to the new
     // "secondary"/violet variant rather than being demoted into sharing
     // an existing color).
     // period: confirmed by user — Aug 2026 (was a "2026"-only placeholder
     // before that, since the source brief didn't supply a date range).
     id: "ai-architect",
-    name: "AI Architect",
-    period: "Aug 2026",
+    name: "ArchMind",
+    period: "Aug 2026 · Updated Oct 2026",
     description:
-      "AI-native system-design tool — describe what you're building and a requirements interview produces a real architecture: services, databases, queues, infrastructure, versioned, cost-estimated, and load-tested. Pipeline: chat / manual edit / GitHub import → one of a handful of typed mutation commands → connectivity, schema, and duplicate-node validation → the canvas renders deterministically from that validated state, never from raw LLM output.",
+      "AI architecture workbench that turns a product idea or an existing repository into a validated, versioned system design. Chat, direct canvas edits, and repository reconstruction all converge on typed mutation commands that pass schema and structural validation before the React Flow canvas renders the accepted state.",
     shortDescription:
-      "Describe a system in plain language and get a real, validated architecture back — the AI never draws the diagram directly.",
+      "Design, validate, compare, and pressure-test a system architecture — the AI proposes changes, but validated state always draws the diagram.",
     highlights: [
       "Requirements interview → real architecture (scale, budget, availability, consistency needs) — never a single LLM call guessing at a diagram.",
-      "A real cost & capacity model across ~30 component types (services, databases, queues, infrastructure), each with versioned assumptions that scale with compute size, storage, and the actual engine named (CockroachDB vs. Postgres, DynamoDB vs. Redis, priced differently).",
+      "Cost and capacity estimation across roughly 30 service, database, queue, dependency, and infrastructure types, using declared assumptions rather than an LLM estimate.",
       "Load & failure simulation — pick a traffic multiplier or kill a component, and a deterministic capacity-propagation model shows what breaks, in what order, and why, animated live on the canvas.",
-      "A deterministic Analyzer scores any design across 7 categories (scalability, reliability, security, cost, observability, performance, maintainability), citing the exact facts behind every finding, with a one-click \"Fix it\" back to the architect agent.",
+      "A deterministic Analyzer scores scalability, reliability, security, cost, observability, performance, and maintainability, with evidence behind each finding.",
       "Import a real, existing repo (zip or GitHub URL) — a deterministic discovery pipeline extracts source-attributed facts (routes, ORM models, SQL migrations, auth usage, real third-party API calls) across Python and JS/TS, and every proposed component is checked against real citations before being accepted. Click a node to see the exact file and line that justified it.",
-      "Export a real starter kit — architecture docs, a dependency-ordered build plan, and a runnable docker-compose.yml for every component with an honest local equivalent.",
+      "Version history supports branching, diffs, and design comparison; exports include architecture docs, an AI brief, Docker Compose, and an environment template.",
     ],
     // First 3 (the card's own chip row) picked to signal what this
     // actually is at a glance: the backend-AI infra (FastAPI, Groq) and
@@ -216,23 +216,29 @@ export const projects: Project[] = [
     // from a typical chat-only AI tool.
     techTags: [
       "FastAPI",
-      "Groq",
       "React Flow",
+      "Groq",
       "Pydantic v2",
-      "PostgreSQL (Supabase)",
+      "PostgreSQL 16",
+      "Next.js 16",
+      "React 19",
+      "Tailwind CSS 4",
+      "dagre",
+      "asyncpg",
+      "OpenRouter",
+      "Mistral",
       "Gemini",
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Render",
-      "Vercel",
+      "Tavily",
+      "Docker Compose",
+      "Caddy",
+      "OCI Ampere A1",
     ],
     githubUrl: "https://github.com/Soban-2004/Archmind-AI-Architect",
-    liveUrl: "https://archmind-ai-architect.vercel.app",
+    liveUrl: "https://140.245.234.125",
     headlineStat: {
-      label: "Backend tests — mutation engine, cost model, ingestion, isolation",
-      value: "190+",
-      numericValue: 190,
+      label: "Modeled service, data, queue & infrastructure types",
+      value: "~30",
+      numericValue: 30,
       suffix: "+",
     },
     featured: true,
@@ -241,18 +247,17 @@ export const projects: Project[] = [
   {
     id: "resume-matcher",
     name: "AI Resume & Job Matcher",
-    period: "Aug 2025 – Nov 2025 (Updated May 2026)",
+    period: "Aug 2025 – Nov 2025 · Updated Oct 2026",
     description:
-      "Full-stack AI recruitment platform — resume analysis for job seekers, hiring workflows for recruiters. Pipeline: document load (OCR fallback for scanned resumes) → dense + BM25 retrieval → reciprocal rank fusion → cross-encoder rerank → GitHub-corroborated, cited answer.",
-    shortDescription: "An AI platform that matches resumes to jobs — for job seekers and hiring teams alike.",
+      "Evidence-first recruitment platform for job seekers and recruiters. Pipeline: resume and job description → dense + BM25 retrieval → reciprocal rank fusion → Cohere reranking → requirement-level verdicts with cited resume evidence, visible gaps, and a weighted fit report.",
+    shortDescription: "Evidence-first resume matching with cited requirements, honest gaps, ATS rewrites, and a staged recruiter funnel.",
     highlights: [
       "Hybrid retrieval: dense + sparse (BM25) search, reciprocal rank fusion, cross-encoder reranking, citation-backed AI responses.",
-      "Three-stage recruiter evaluation pipeline (dense prescreen → skill match → LLM review) — shortlists top ~5% of candidates, cutting full rubric reviews by ~95%.",
-      "Three-tier LLM fallback chain (Ollama → Gemini → Groq) for rate-limit resilience; Supabase auth + PostgreSQL backend for persistent hiring campaigns.",
-      "Corroboration layer verifies weak resume claims against live GitHub repo content before upgrading evidence score — closes a keyword-stuffing gap.",
-      "OCR fallback (OCR.space) for scanned/image-only resumes below a text-extraction threshold — verified end-to-end against a real zero-text-layer PDF, not just unit-tested.",
-      "LRU cache dedupes repeated Cohere embedding calls by (model, input_type, text); job creation across all 3 intake paths is content-hash idempotent, returning the original job on a repeat submission instead of duplicating it.",
-      "Groundedness eval harness: for every requirement the rubric marks satisfied, checks the cited evidence snippet actually appears in the source resume — 15/15 requirements grounded, 0 hallucinated citations, in its first real run.",
+      "Three-stage recruiter funnel — dense prescreen, lightweight skill matching, then full evidence retrieval and requirement-level LLM review — pauses for approval between rounds.",
+      "Job seekers can inspect eligibility, supporting evidence, and gaps; generate a cover letter and ATS-oriented rewrite; run a separate fabrication check; and export the accepted resume as PDF.",
+      "Recruiters can create persistent hiring projects, upload up to 25 resumes per batch, compare ranked candidates, and accumulate candidates across multiple batches.",
+      "Supabase authentication and owner-scoped PostgreSQL records protect saved reports and recruiter projects; fixed server-side samples provide an account-free demo.",
+      "OCR fallback handles scanned PDFs; rolling rate limits, content-based deduplication, upload limits, structured logs, and optional Sentry reporting harden the production path.",
     ],
     // First 3 (the ones ProjectCard shows as chips) specified directly —
     // "RAG (Retrieval-Augmented Generation)" and "Hybrid Search &
@@ -266,33 +271,39 @@ export const projects: Project[] = [
       "Hybrid Search & Reranking",
       "FastAPI",
       "Qdrant",
-      "Ollama",
+      "Cohere",
+      "Ollama Cloud",
       "Gemini",
       "Groq",
       "Next.js 16",
+      "React 19",
+      "PostgreSQL 17",
       "Supabase",
       "OCR",
+      "Docker Compose",
+      "Caddy",
+      "OCI",
     ],
-    githubUrl: "https://github.com/Soban-2004/Job_Resume_Matcher",
-    liveUrl: "https://ai-resume-job-matcher-rag-platform-soban-2004s-projects.vercel.app/",
-    headlineStat: { label: "Fewer full rubric reviews needed", value: "~95%", numericValue: 95, suffix: "%" },
+    githubUrl: "https://github.com/Soban-2004/AI-Resume-Job-Matcher---Full-Stack-RAG-Platform",
+    liveUrl: "https://140.245.234.125/job-resume-matcher/",
+    headlineStat: { label: "Backend + Playwright tests passing", value: "32", numericValue: 32 },
     featured: true,
     caseStudyRoute: "/work/resume-matcher",
   },
   {
     id: "flipkart-faq",
-    name: "Agentic RAG Customer Support Platform",
-    period: "Nov 2025 – Jan 2026",
+    name: "Aster",
+    period: "Nov 2025 – Jan 2026 · Rebuilt Oct 2026",
     description:
-      "Agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus — order status, refund tracking, human escalation via MCP tools, optional photo attachment via a vision model. Pipeline: query → (optional) vision description → intent routing → hybrid Qdrant retrieval → MCP tool fallback → 7-scanner LLM Guard → grounded answer.",
-    shortDescription: "An AI support agent that answers order and refund questions from a real FAQ corpus, escalating to a human when it can't.",
+      "Production-minded support assistant built on a Flipkart help-centre dataset. A bounded planner routes each WebSocket turn to a deterministic response, grounded FAQ retrieval, or one account-scoped tool; PostgreSQL persists conversations and idempotent actions, while versioned Qdrant collections keep knowledge releases reversible.",
+    shortDescription: "A scoped support assistant with grounded FAQ answers, durable chats, safe account tools, citations, and reconnect-safe WebSockets.",
     highlights: [
-      "Built on LlamaIndex: intent-routing planner, 5 integrated tools (FAQ search + 4 MCP tools), LiteLLM gateway with fallback across 3 models / 2 providers.",
-      "LLM Guard guardrails (7 parallel scanners) cut latency from ~4.5s → ~1s.",
-      "Validated via 25-scenario RAGAS evaluation; deployed as a Docker container on Render.",
-      "Vision support (Groq Llama 4 Scout): a customer can attach a photo of a damaged/defective item, described in plain text before the normal pipeline runs.",
-      "Every chat turn tagged in Langfuse with exactly how it resolved (cache hit, guardrail block, specific tool, plain chat, or error) via a new score_resolution_path() observability layer.",
-      "A new intent-classification eval suite (gold-labeled, all 5 intents) caught a live production incident — two of the LLM gateway's models silently deprecated by Groq — on its first run; fixed and verified 3 ways, including against the exact production configuration.",
+      "Eight bounded intents keep social chat, off-topic requests, multiple actions, public FAQ lookup, and account support on explicit paths; unsupported requests never reach a general-purpose answer path.",
+      "FAQ answers use versioned Qdrant knowledge collections, Cohere embeddings and reranking, Groq synthesis, citations, and a tightly allowlisted semantic cache for public questions only.",
+      "Order status, refund status, order notes, and handoff use trusted server-side actor context and allow at most one simulated account action per turn.",
+      "Typed WebSocket frames use stable client message IDs, replay after reconnect, turn deadlines, idempotency keys, and committed completion semantics.",
+      "PostgreSQL stores users, revocable sessions, threads, messages, quotas, and an action ledger; anonymous demo conversations remain ephemeral.",
+      "Production validation: 71/71 deterministic backend and PostgreSQL tests plus 24/24 live intent cases, with smoke coverage for citations, tools, notes, handoff, injection attempts, invalid frames, reconnects, and scope control.",
     ],
     // Requested order was ["LangGraph / Agentic AI", "MCP (Model Context
     // Protocol)", "LlamaIndex"] — used "Agentic AI" alone rather than
@@ -305,21 +316,27 @@ export const projects: Project[] = [
     // agentic RAG with tool-calling, per the project's own title).
     techTags: [
       "Agentic AI",
-      "MCP (Model Context Protocol)",
       "LlamaIndex",
       "LiteLLM",
       "Qdrant",
+      "Cohere",
+      "FastAPI",
+      "WebSockets",
+      "PostgreSQL 17",
+      "React 19",
+      "TypeScript 6",
+      "Vite 8",
       "Docker",
-      "LLM Guard",
-      "RAGAS",
       "Vision (Llama 4 Scout)",
       "Langfuse",
+      "Caddy",
+      "OCI",
     ],
-    githubUrl: "https://github.com/Soban-2004/Flipkart_faq_chatbot",
-    liveUrl: "https://agentic-rag-customer-support-platform.onrender.com",
-    headlineStat: { label: "Latency reduction", value: "4.5s → 1s" },
+    githubUrl: "https://github.com/Soban-2004/Agentic-RAG-Customer-Support-Platform-Flipkart-FAQ-",
+    liveUrl: "https://140.245.234.125/aster/",
+    headlineStat: { label: "Deterministic backend + PostgreSQL tests", value: "71/71" },
     featured: true,
-    caseStudyRoute: "/work/flipkart-faq",
+    caseStudyRoute: "/work/aster",
   },
   {
     id: "fitnova",
@@ -545,8 +562,8 @@ export const education = {
 // ---------------------------------------------------------------------------
 
 export const impactSnapshot: ImpactStat[] = [
-  { label: "Fewer full rubric reviews", value: "~95%", numericValue: 95, suffix: "%" },
-  { label: "Report latency cut", value: "4.5s → 1s" },
+  { label: "Aster deterministic tests", value: "71/71" },
+  { label: "Resume Matcher tests", value: "32", numericValue: 32 },
   { label: "Schema objects indexed via RAG", value: "2,000+", numericValue: 2000, suffix: "+" },
   { label: "Manual config effort automated", value: "~60–70%", numericValue: 65, suffix: "%" },
   { label: "OSS PR merged", value: "langchain-ai/langchain #39238" },
@@ -560,15 +577,15 @@ export const impactSnapshot: ImpactStat[] = [
 
 export const techNodes: TechNode[] = [
   // Programming & Backend
-  { id: "python", label: "Python", category: "backend", relatedProjectIds: ["cricket-analysis"] },
-  { id: "fastapi", label: "FastAPI", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova", "ai-architect"] },
+  { id: "python", label: "Python", category: "backend", relatedProjectIds: ["ai-architect", "resume-matcher", "flipkart-faq", "fitnova", "cricket-analysis"] },
+  { id: "fastapi", label: "FastAPI", category: "backend", relatedProjectIds: ["resume-matcher", "flipkart-faq", "fitnova", "ai-architect"] },
   { id: "sql", label: "SQL", category: "backend", relatedProjectIds: [] },
   { id: "mysql", label: "MySQL", category: "backend", relatedProjectIds: [] },
-  { id: "postgresql", label: "PostgreSQL (Supabase)", category: "backend", relatedProjectIds: ["resume-matcher", "fitnova", "ai-architect"] },
+  { id: "postgresql", label: "PostgreSQL", category: "backend", relatedProjectIds: ["resume-matcher", "flipkart-faq", "fitnova", "ai-architect"] },
   // Added with FitNova's Live Call Coaching update — the mic stream to
   // Deepgram's live API runs over a WebSocket, not the REST calls the
   // rest of the pipeline uses.
-  { id: "websockets", label: "WebSockets", category: "backend", relatedProjectIds: ["fitnova"] },
+  { id: "websockets", label: "WebSockets", category: "backend", relatedProjectIds: ["flipkart-faq", "fitnova"] },
 
   // LLM & Agentic AI
   { id: "langchain", label: "LangChain", category: "llm-agentic", relatedProjectIds: [] },
@@ -588,22 +605,23 @@ export const techNodes: TechNode[] = [
 
   // Vector DB & Retrieval
   { id: "qdrant", label: "Qdrant", category: "vector-db", relatedProjectIds: ["resume-matcher", "flipkart-faq"] },
+  { id: "cohere", label: "Cohere Embeddings & Reranking", category: "vector-db", relatedProjectIds: ["resume-matcher", "flipkart-faq"] },
   { id: "weaviate", label: "Weaviate", category: "vector-db", relatedProjectIds: [] },
   { id: "hybrid-search", label: "Hybrid Search (BM25) & Reranking", category: "vector-db", relatedProjectIds: ["resume-matcher"] },
   { id: "huggingface", label: "Hugging Face Models", category: "vector-db", relatedProjectIds: [] },
 
   // LLMOps & Evaluation
   { id: "litellm", label: "LiteLLM", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
-  { id: "llm-guard", label: "LLM Guard", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
+  { id: "llm-guard", label: "LLM Guard", category: "llmops", relatedProjectIds: [] },
   { id: "langfuse", label: "Langfuse", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
-  // Added when AI Architect's brief named Gemini as its structural-review
+  // Added when ArchMind's brief named Gemini as its structural-review
   // pass — at that point genuinely evidenced across 3 projects' own
   // Tech: lines (fitnova, resume-matcher, ai-architect), not just one,
   // so worth its own node rather than staying untracked.
   { id: "gemini", label: "Gemini", category: "llmops", relatedProjectIds: ["fitnova", "resume-matcher", "ai-architect"] },
-  { id: "ragas", label: "RAGAS", category: "llmops", relatedProjectIds: ["flipkart-faq"] },
-  { id: "openrouter", label: "OpenRouter", category: "llmops", relatedProjectIds: [] },
-  { id: "groq", label: "Groq API", category: "llmops", relatedProjectIds: ["fitnova", "ai-architect"] },
+  { id: "ragas", label: "RAGAS", category: "llmops", relatedProjectIds: [] },
+  { id: "openrouter", label: "OpenRouter", category: "llmops", relatedProjectIds: ["ai-architect"] },
+  { id: "groq", label: "Groq API", category: "llmops", relatedProjectIds: ["resume-matcher", "flipkart-faq", "fitnova", "ai-architect"] },
   { id: "openai-api", label: "OpenAI API", category: "llmops", relatedProjectIds: [] },
 
   // Machine Learning
@@ -614,14 +632,15 @@ export const techNodes: TechNode[] = [
   // Cloud & DevOps
   { id: "git", label: "Git", category: "cloud-devops", relatedProjectIds: [] },
   { id: "github", label: "GitHub", category: "cloud-devops", relatedProjectIds: [] },
-  { id: "docker", label: "Docker", category: "cloud-devops", relatedProjectIds: ["flipkart-faq"] },
+  { id: "docker", label: "Docker", category: "cloud-devops", relatedProjectIds: ["resume-matcher", "flipkart-faq", "ai-architect"] },
+  { id: "caddy", label: "Caddy", category: "cloud-devops", relatedProjectIds: ["resume-matcher", "flipkart-faq", "ai-architect"] },
   { id: "nginx", label: "Nginx", category: "cloud-devops", relatedProjectIds: [] },
   { id: "redis", label: "Redis", category: "cloud-devops", relatedProjectIds: [] },
   { id: "linux", label: "Linux", category: "cloud-devops", relatedProjectIds: [] },
   { id: "azure", label: "Azure", category: "cloud-devops", relatedProjectIds: [] },
-  { id: "oci", label: "Oracle Cloud Infrastructure (OCI)", category: "cloud-devops", relatedProjectIds: [] },
-  { id: "render", label: "Render", category: "cloud-devops", relatedProjectIds: ["flipkart-faq", "fitnova"] },
-  { id: "vercel", label: "Vercel", category: "cloud-devops", relatedProjectIds: ["resume-matcher", "fitnova"] },
+  { id: "oci", label: "Oracle Cloud Infrastructure (OCI)", category: "cloud-devops", relatedProjectIds: ["resume-matcher", "flipkart-faq", "ai-architect"] },
+  { id: "render", label: "Render", category: "cloud-devops", relatedProjectIds: ["fitnova"] },
+  { id: "vercel", label: "Vercel", category: "cloud-devops", relatedProjectIds: ["fitnova"] },
 ];
 
 export const techCategoryLabels: Record<TechCategory, string> = {

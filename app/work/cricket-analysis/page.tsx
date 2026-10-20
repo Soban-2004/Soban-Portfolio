@@ -34,7 +34,7 @@ const GALLERY: { src: string; alt: string; width: number; height: number }[] = [
 
 export default function CricketAnalysisPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-24 pt-28">
+    <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=cricket-analysis"
@@ -102,6 +102,6 @@ export default function CricketAnalysisPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>
       </section>
-    </main>
+    </article>
   );
 }

@@ -6,10 +6,10 @@ import { projects } from "@/lib/content";
 const aiArchitect = projects.find((p) => p.id === "ai-architect")!;
 const fitnova = projects.find((p) => p.id === "fitnova")!;
 const resumeMatcher = projects.find((p) => p.id === "resume-matcher")!;
-const flipkart = projects.find((p) => p.id === "flipkart-faq")!;
+const aster = projects.find((p) => p.id === "flipkart-faq")!;
 const cricket = projects.find((p) => p.id === "cricket-analysis")!;
 
-// aiArchitect leads as the new flagship slide; fitnova moves to
+// ArchMind leads as the flagship slide; FitNova uses the
 // "secondary" (its own violet, not a demotion into sharing another
 // project's color — see ProjectCard.tsx's variant comment).
 const slides: ProjectSlide[] = [
@@ -32,10 +32,10 @@ const slides: ProjectSlide[] = [
   },
   { project: resumeMatcher, category: "Full-Stack RAG Platform", variant: "info" },
   {
-    project: flipkart,
-    category: "Agentic RAG Support",
+    project: aster,
+    category: "Production Agentic RAG Support",
     variant: "alert",
-    terminalLines: ["$ ragas eval --scenarios 25", "25/25 scenarios validated", "latency: 4.5s -> 1.0s (7 guardrail scanners)"],
+    terminalLines: ["$ pytest -q", "71/71 deterministic tests passed", "$ eval --suite intent  # 24/24 live cases"],
   },
   { project: cricket, category: "Earlier Work — Data Analysis", variant: "standard" },
 ];

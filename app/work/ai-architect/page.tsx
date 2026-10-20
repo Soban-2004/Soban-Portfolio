@@ -8,9 +8,9 @@ import { ArchitectureDiagram, type DiagramNode } from "@/components/shared/Archi
 import { projects } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "AI Architect — Soban Shankar",
+  title: "ArchMind — AI Architecture Workbench | Soban Shankar",
   description:
-    "How AI Architect turns a plain-language description into a real, validated system architecture — the LLM never draws the diagram directly, it only emits typed mutation commands checked against real structural rules.",
+    "How ArchMind turns a product idea or repository into a validated, versioned architecture that can be compared, costed, simulated, and exported.",
 };
 
 const project = projects.find((p) => p.id === "ai-architect")!;
@@ -99,7 +99,7 @@ const DECISIONS = [
 
 export default function AiArchitectPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-24 pt-28">
+    <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=ai-architect"
@@ -111,7 +111,7 @@ export default function AiArchitectPage() {
 
       <p className="mt-8 font-mono text-sm text-accent-soft">Featured Case Study</p>
       <h1 className="font-display-3d mt-2 text-balance text-2xl leading-[1.4] text-foreground sm:text-3xl">
-        AI Architect
+        ArchMind
       </h1>
       <p className="mt-3 font-mono text-sm text-muted">{project.period}</p>
 
@@ -133,15 +133,14 @@ export default function AiArchitectPage() {
         <h2 className="font-mono text-sm text-accent-soft">Overview</h2>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">{project.description}</p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A requirements interview (scale, budget, availability, consistency needs) produces the first grounded
-          design — never a single LLM call guessing at a diagram. From there, a real cost &amp; capacity model
-          across ~30 component types, a load/failure simulator, and a 7-category Analyzer all operate on the same
-          validated architecture state.
+          A requirements interview collects the scale, budget, availability, and platform constraints needed for
+          the first design. From there, cost and capacity estimates across roughly 30 component types, a
+          load/failure simulator, and a 7-category Analyzer all operate on the same validated architecture state.
         </p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A validated design becomes an actual starting point, not just a picture of one — export produces
-          architecture docs, a dependency-ordered build plan, and a runnable docker-compose.yml for every
-          component with an honest local equivalent.
+          Version history makes decisions traceable: compare designs, inspect diffs, or branch from an earlier
+          version. A validated design can then be exported as architecture documentation, an AI implementation
+          brief, Docker Compose, and an environment template.
         </p>
       </section>
 
@@ -185,6 +184,6 @@ export default function AiArchitectPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>
       </section>
-    </main>
+    </article>
   );
 }

@@ -77,13 +77,12 @@ function useTypewriter(text: string, active: boolean, speed: number, direction: 
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      setOut("");
-      setDone(false);
-      return;
-    }
+    if (!active) return;
     let i = direction === "forward" ? 0 : text.length;
-    setOut(text.slice(0, i)); // the true starting frame, shown immediately rather than waiting for the first tick
+    const startId = window.setTimeout(() => {
+      setOut(text.slice(0, i));
+      setDone(false);
+    }, 0);
     const id = window.setInterval(() => {
       i += direction === "forward" ? 1 : -1;
       setOut(text.slice(0, i));
@@ -93,10 +92,13 @@ function useTypewriter(text: string, active: boolean, speed: number, direction: 
         setDone(true);
       }
     }, speed);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearTimeout(startId);
+      window.clearInterval(id);
+    };
   }, [text, active, speed, direction]);
 
-  return { out, done };
+  return { out: active ? out : "", done: active ? done : false };
 }
 
 function CertRow({ cert, index }: { cert: Certification; index: number }) {

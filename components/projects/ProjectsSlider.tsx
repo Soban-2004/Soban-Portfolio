@@ -11,7 +11,7 @@
 // anyone wants to sit through it. A carousel costs the same amount of
 // scrolling whether there are 4 projects or 14; you just click through.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, animate, useInView, useMotionValue, useTransform } from "motion/react";
 import { ProjectCard, type ProjectVariant } from "@/components/projects/ProjectCard";
@@ -38,6 +38,22 @@ export interface ProjectSlide {
 
 const AUTOPLAY_MS = 6000;
 
+const subscribeToReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const getServerReducedMotion = () => false;
+
+const subscribeToCoarsePointer = (onChange: () => void) => {
+  const query = window.matchMedia("(pointer: coarse)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const getCoarsePointer = () => window.matchMedia("(pointer: coarse)").matches;
+const getServerCoarsePointer = () => false;
+
 function pad(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -61,7 +77,7 @@ function getTargetIndexFromHash(slides: ProjectSlide[]): number | null {
 // specifically, and it also keeps the control visually tied to the site's
 // own display type rather than a generic icon library glyph.
 const ARROW_BUTTON =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-surface-border text-accent transition-colors duration-150 hover:border-accent hover:bg-accent/10 active:border-accent active:bg-accent/10 sm:h-11 sm:w-11";
+  "flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-md border border-surface-border text-accent transition-colors duration-150 hover:border-accent hover:bg-accent/10 active:border-accent active:bg-accent/10";
 
 function ArrowGlyph({ direction }: { direction: "prev" | "next" }) {
   return (
@@ -135,10 +151,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   // at `false` here matches the server's render unconditionally; the
   // effect corrects it immediately after mount if the preference is
   // actually set.
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  useEffect(() => {
-    setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+  const prefersReducedMotion = useSyncExternalStore(subscribeToReducedMotion, getReducedMotion, getServerReducedMotion);
   // Same reason for reading this in an effect rather than at render time —
   // matchMedia isn't available during SSR, so this has to start at a fixed
   // default and correct itself after mount, not be computed inline.
@@ -149,10 +162,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   // apart from touch. It's also what picks which of the two render paths
   // below is active: PhysicalTrack (real drag-follows-finger + momentum
   // settle) here, the plain AnimatePresence crossfade for everything else.
-  const [supportsSwipe, setSupportsSwipe] = useState(false);
-  useEffect(() => {
-    setSupportsSwipe(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
+  const supportsSwipe = useSyncExternalStore(subscribeToCoarsePointer, getCoarsePointer, getServerCoarsePointer);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Case-study transition: a brief "$ cd /work/..." flash before the
@@ -190,6 +200,8 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   // to avoid.
   const [userInteracted, setUserInteracted] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [focusedWithin, setFocusedWithin] = useState(false);
+  const [autoplayPaused, setAutoplayPaused] = useState(false);
   // Bumped once per settled transition on the touch path (drag-release or
   // a button/dot tap) to retrigger GlitchFlourish above without needing
   // the card to actually remount — the touch path keeps one persistent
@@ -305,7 +317,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   }, [slides]);
 
   useEffect(() => {
-    if (prefersReducedMotion || userInteracted || hovered || !inView || n <= 1) return;
+    if (prefersReducedMotion || userInteracted || hovered || focusedWithin || autoplayPaused || !inView || n <= 1) return;
     const timer = window.setInterval(() => {
       if (supportsSwipe) {
         commitStep(1);
@@ -316,7 +328,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
     }, AUTOPLAY_MS);
     return () => window.clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefersReducedMotion, userInteracted, hovered, inView, n, supportsSwipe, trackWidth]);
+  }, [prefersReducedMotion, userInteracted, hovered, focusedWithin, autoplayPaused, inView, n, supportsSwipe, trackWidth]);
 
   const slide = slides[index];
   const prevSlide = slides[(index - 1 + n) % n];
@@ -340,7 +352,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
   };
 
   const dots = (
-    <div className="flex items-center gap-2" role="group" aria-label="Select a project">
+    <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Select a project">
       {slides.map((s, i) => (
         <button
           key={s.project.id}
@@ -348,10 +360,14 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
           onClick={() => handleDotClick(i)}
           aria-label={`View ${s.project.name}`}
           aria-current={i === index}
-          className={`h-2 w-2 rounded-full transition-[background-color,transform] duration-200 ${
-            i === index ? "scale-125 bg-accent" : "bg-surface-border hover:bg-muted active:bg-muted"
+          className={`min-h-[44px] shrink-0 rounded-md border px-3 font-mono text-[11px] uppercase transition-colors duration-150 ${
+            i === index
+              ? "border-accent bg-accent/15 text-accent"
+              : "border-surface-border text-muted hover:border-accent/50 hover:text-foreground"
           }`}
-        />
+        >
+          {s.project.name}
+        </button>
       ))}
     </div>
   );
@@ -361,12 +377,32 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
     // wrapper already provides mx-auto max-w-6xl px-6 (this used to need
     // its own, back when the section itself was deliberately unconstrained
     // for the old scroll-jacked slide's vw-based math).
-    <div ref={containerRef} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <div className="flex items-baseline justify-between font-mono text-xs uppercase tracking-wide text-muted">
+    <div
+      ref={containerRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocusedWithin(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusedWithin(false);
+      }}
+    >
+      <div className="flex items-center justify-between gap-4 font-mono text-xs uppercase tracking-wide text-muted">
         <span>
           Project <span className="text-foreground">{pad(index + 1)}</span> / {pad(n)}
         </span>
-        <span className="hidden text-foreground sm:inline">{slide.project.name}</span>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-foreground sm:inline">{slide.project.name}</span>
+          {!prefersReducedMotion && !userInteracted && n > 1 && (
+            <button
+              type="button"
+              aria-pressed={autoplayPaused}
+              onClick={() => setAutoplayPaused((paused) => !paused)}
+              className="min-h-[44px] rounded-md border border-surface-border px-3 text-[11px] text-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {autoplayPaused ? "PLAY" : "PAUSE"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* lg+: arrows flank the card, vertically centered against it — the
@@ -438,7 +474,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
                 key={slide.project.id}
                 custom={direction}
                 variants={slideVariants}
-                initial={prefersReducedMotion ? false : "enter"}
+                initial={direction === 0 || prefersReducedMotion ? false : "enter"}
                 animate="center"
                 exit={prefersReducedMotion ? undefined : "exit"}
                 // A 300/30 spring here settled in under 100ms — far too
@@ -463,7 +499,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
                 // of that and re-centering is what actually shrinks the
                 // carousel's footprint. Left off below sm — mobile never
                 // hits this path anyway (supportsSwipe is what gates it).
-                className="relative sm:mx-auto sm:w-[70%]"
+                className="relative sm:mx-auto sm:w-[85%]"
               >
                 <ProjectCard
                   project={slide.project}
@@ -610,7 +646,7 @@ function PhysicalTrack({
   const nextScale = useTransform(trackX, [-w, 0], [1, 0.96]);
 
   return (
-    <div ref={viewportRef} className="relative sm:mx-auto sm:w-[70%]">
+    <div ref={viewportRef} className="relative sm:mx-auto sm:w-[85%]">
       <motion.div
         className="relative touch-pan-y"
         style={{ x: trackX }}
@@ -636,6 +672,7 @@ function PhysicalTrack({
         <>
           <motion.div
             aria-hidden="true"
+            inert
             className="pointer-events-none absolute inset-0"
             style={{ x: prevX, opacity: prevOpacity, scale: prevScale }}
           >
@@ -643,6 +680,7 @@ function PhysicalTrack({
           </motion.div>
           <motion.div
             aria-hidden="true"
+            inert
             className="pointer-events-none absolute inset-0"
             style={{ x: nextX, opacity: nextOpacity, scale: nextScale }}
           >

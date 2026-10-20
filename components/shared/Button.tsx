@@ -18,7 +18,7 @@ import { useReducedMotion } from "motion/react";
 // layout reads as mismatched, not "the same design, smaller"). sm: and up
 // restore the exact original values, so laptop/desktop is untouched.
 const base =
-  "inline-flex min-h-9 items-center gap-1.5 rounded-md px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 sm:min-h-11 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm";
+  "inline-flex min-h-[44px] items-center gap-1.5 rounded-md px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm";
 
 const variants = {
   primary: "bg-foreground text-background hover:bg-accent-soft hover:text-background",

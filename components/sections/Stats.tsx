@@ -12,8 +12,8 @@ import { identity, projects, research } from "@/lib/content";
 // with the domain terms themselves — spelled out, not just implied by the
 // tool names — fixes that; each one is directly attested in profile.md
 // (identity.role: "AI Engineer (LLMs, RAG, Agentic AI)"; hero.headline:
-// "agentic RAG systems, multi-agent orchestration"; MCP is a named tool
-// in the Flipkart FAQ project's tech list).
+// "agentic RAG systems, multi-agent orchestration"; MCP is listed in the
+// verified technical-skills inventory).
 const CORE_STACK = [
   "Agentic AI",
   "RAG",
@@ -41,7 +41,7 @@ const CORE_STACK_MOBILE_LABEL: Record<string, string> = {
 };
 
 export function Stats() {
-  const flipkart = projects.find((p) => p.id === "flipkart-faq")!;
+  const aster = projects.find((p) => p.id === "flipkart-faq")!;
   const resumeMatcher = projects.find((p) => p.id === "resume-matcher")!;
 
   return (
@@ -76,7 +76,7 @@ export function Stats() {
           for why). Each also gets Reveal directly (not StatBox, which is a
           different component) with the same small stagger as the row above.
           Mobile layout: Core Stack spans both columns of a 2-col grid,
-          Latency Cut/Schema Scale sit side by side beneath it — three full-
+          Aster Validation/Schema Scale sit side by side beneath it — three full-
           width stacked cards (the old grid-cols-1 default) ran too tall to
           keep this section on one screen. lg+ still resolves to the
           original single-row [1fr_auto_auto] layout, col-span reset to 1. */}
@@ -101,9 +101,9 @@ export function Stats() {
           delay={80}
           className="rounded-md border border-critical p-3 transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_10px_28px_-12px_rgba(255,59,110,0.4)] active:-translate-y-1 active:shadow-[0_10px_28px_-12px_rgba(255,59,110,0.4)] sm:p-5"
         >
-          <p className="font-mono text-xs uppercase tracking-wide text-muted">Latency Cut</p>
-          <p className="mt-1 font-mono text-xl font-black text-critical sm:mt-2 sm:text-3xl">{flipkart.headlineStat.value}</p>
-          <p className="mt-1 font-mono text-[10px] text-muted">7 parallel guardrail scanners</p>
+          <p className="font-mono text-xs uppercase tracking-wide text-muted">Aster Validation</p>
+          <p className="mt-1 font-mono text-xl font-black text-critical sm:mt-2 sm:text-3xl">{aster.headlineStat.value}</p>
+          <p className="mt-1 font-mono text-[10px] text-muted">deterministic backend + PostgreSQL tests</p>
         </Reveal>
         <Reveal
           y={16}
@@ -136,7 +136,7 @@ export function Stats() {
             as HIRE() in the nav and LIVE_LINK on project cards. */}
         <Link
           href="#contact"
-          className="invert-static-burst ml-auto inline-flex min-h-9 shrink-0 items-center rounded-md border-2 border-accent bg-accent px-3.5 py-1.5 font-mono text-xs font-medium text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
+          className="invert-static-burst ml-auto inline-flex min-h-[44px] shrink-0 items-center rounded-md border-2 border-accent bg-accent px-3.5 py-1.5 font-mono text-xs font-medium text-background transition-colors duration-150 hover:bg-transparent hover:text-accent active:bg-transparent active:text-accent sm:px-5 sm:py-2.5 sm:text-sm"
         >
           CONTACT()
         </Link>

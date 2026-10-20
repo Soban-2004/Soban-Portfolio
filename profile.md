@@ -44,9 +44,9 @@ AI Engineer with hands-on enterprise AI experience through a 6-month internship 
 
 ## 5. Featured Projects
 
-### 0. AI Architect — AI-Native System Design *(new flagship — added most recently)*
-**Aug 2026** *(confirmed by user)*
-[GitHub](https://github.com/Soban-2004/Archmind-AI-Architect) · [Live Demo](https://archmind-ai-architect.vercel.app)
+### 0. ArchMind — AI Architecture Workbench *(flagship)*
+**Aug 2026 · Updated Oct 2026**
+[GitHub](https://github.com/Soban-2004/Archmind-AI-Architect) · [Live Demo](https://140.245.234.125)
 
 Describe a system in plain language and get back a real, validated system architecture — the AI never draws the
 diagram directly, it only emits structured mutation commands checked against real structural rules before
@@ -59,9 +59,8 @@ an imported real GitHub repo all produce the exact same validated commands.
 
 - Requirements interview (scale, budget, availability, consistency needs) → a grounded first design, never a
   single LLM call guessing at a diagram.
-- A real cost & capacity model — ~30 component types across services, databases, queues, infrastructure, each
-  with versioned capacity/cost assumptions that scale with compute size, storage, and the actual engine named
-  (CockroachDB vs. Postgres, DynamoDB vs. Redis, priced differently).
+- Cost and capacity estimation across roughly 30 service, database, queue, dependency, and infrastructure types,
+  using declared assumptions rather than an LLM estimate.
 - Load & failure simulation — a traffic multiplier or a killed component drives a deterministic
   capacity-propagation model showing what breaks, in what order, and why, animated live on the canvas.
 - A deterministic Analyzer scoring any design across 7 categories (scalability, reliability, security, cost,
@@ -71,63 +70,67 @@ an imported real GitHub repo all produce the exact same validated commands.
   source-attributed facts (routes, ORM models, SQL migrations, auth usage, real third-party API calls) across
   Python and JS/TS, hands only those facts to the LLM, and checks every proposed component against real citations
   before accepting it. Click a node to see the exact file and line that justified it.
-- Export a real starter kit — architecture docs, a dependency-ordered build plan, and a runnable
-  docker-compose.yml for every component with an honest local equivalent.
+- Version history supports branching from earlier designs, inspecting diffs, and comparing versions.
+- Export produces `ARCHITECTURE.md`, `AI_BRIEF.md`, `docker-compose.yml`, and `.env.example`.
 - Guest mode with real per-visitor privacy — no login, but projects are genuinely only visible to the browser
   that created them, via a private per-visitor identity, not just client-side hiding.
 
-**Tech:** FastAPI, Pydantic v2, PostgreSQL (Supabase) via asyncpg, Groq (primary LLM) + Gemini (structural review
-pass), Next.js, React, TypeScript, React Flow, Render (backend) + Vercel (frontend) + Supabase (database)
-**Testing:** 190+ backend tests (pytest) — mutation engine, capacity/cost model, ingestion pipeline, per-visitor
-isolation
-**Headline stat:** `190+` backend tests
+**Tech:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, React Flow, dagre, FastAPI, Pydantic, asyncpg,
+PostgreSQL 16, OpenRouter, Groq, Mistral, Gemini, Tavily, Docker Compose, Caddy, OCI Ampere A1
+**Headline stat:** `~30` modeled component types
 
-**Portfolio placement:** now the site's flagship/featured project, ahead of FitNova — technical depth (the
-validated-mutation-command architecture, live infra, 190+ tests) reads as comparable to or beyond FitNova's own.
-FitNova moved to a regular featured slot (its own new "secondary"/violet card color, not sharing one).
+**Portfolio placement:** the site's flagship project. The strongest story is the validated mutation pipeline:
+model output proposes typed changes, backend rules decide what becomes architecture state, and every downstream
+view operates on that accepted state.
 
 ---
 
 ### 1. AI Resume & Job Matcher — Full-Stack RAG Platform
-**Aug 2025 – Nov 2025 (Updated May 2026)**
-[GitHub](https://github.com/Soban-2004/Job_Resume_Matcher) · [Live Demo](https://ai-resume-job-matcher-rag-platform-soban-2004s-projects.vercel.app/)
+**Aug 2025 – Nov 2025 · Updated Oct 2026**
+[GitHub](https://github.com/Soban-2004/AI-Resume-Job-Matcher---Full-Stack-RAG-Platform) · [Live Demo](https://140.245.234.125/job-resume-matcher/)
 
 - Full-stack AI recruitment platform (Next.js 16, FastAPI, Supabase, Qdrant) — resume analysis for job seekers, hiring workflows for recruiters.
 - Hybrid retrieval: dense + sparse (BM25) search, reciprocal rank fusion, cross-encoder reranking, citation-backed AI responses.
-- Three-stage recruiter evaluation pipeline (dense prescreen → skill match → LLM review) — shortlists top ~5% of candidates, cutting full rubric reviews by ~95%.
-- Three-tier LLM fallback chain (Ollama → Gemini → Groq) for rate-limit resilience; Supabase auth + PostgreSQL backend for persistent hiring campaigns.
-- Corroboration layer verifies weak resume claims against live GitHub repo content before upgrading evidence score — closes a keyword-stuffing gap.
+- Three-stage recruiter funnel (dense prescreen → skill match → full evidence review), with explicit approval between rounds.
+- Job seekers can inspect evidence and gaps, generate a tailored cover letter and ATS-oriented rewrite, run a separate fabrication check, and export PDF.
+- Recruiters can create persistent projects, upload up to 25 resumes per batch, compare ranked candidates, and accumulate candidates across batches.
+- Three-tier LLM fallback chain (Ollama Cloud → Gemini → Groq); Supabase auth + owner-scoped PostgreSQL records persist private work.
 
-**Tech:** Next.js 16, FastAPI, Supabase, Qdrant, BM25, Cross-encoder reranking
-*(Ollama, Gemini, and Groq are also used here — see the LLM fallback chain bullet above — the terse Tech: line above just didn't originally list them individually; the site's ProjectCard tags now include all three)*
-**Headline stat:** `~95%` fewer full rubric reviews needed
+**Tech:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, FastAPI, Python 3.12, SQLAlchemy, PostgreSQL 17,
+Supabase, Qdrant, Cohere embeddings/reranking, BM25, reciprocal rank fusion, Ollama Cloud, Gemini, Groq,
+Docker Compose, Caddy, OCI
+**Headline stat:** `32` current tests passing — 16 backend + 16 Playwright
 
 **Recent additions (verified this round, mapped to a target job's skill checklist):**
 - **Caching:** `embed_texts()` now caches every Cohere embedding by `(model, input_type, text)` in a bounded LRU — a recruiter batch re-embedding the same JD requirement text against 50 candidates now embeds each distinct string once, not 50 times.
 - **Idempotency:** job creation across all 3 endpoints (job-seeker, guest demo, recruiter batch) hashes submitted content and dedupes a repeat within a short TTL, returning the original job instead of starting a duplicate.
 - **Observability:** logs are now JSON lines (parseable by `jq`/any aggregator); Sentry wired in behind an optional `SENTRY_DSN`, a genuine no-op until configured.
 - **OCR fallback:** PyMuPDF only reads a PDF's text layer, so a scanned/photographed resume used to silently extract to near-nothing. `document_loader` now detects that (extracted text below a length threshold) and falls back to OCR.space's hosted API — verified live against a real synthetic image-only PDF through the actual `load_document()` entry point, not just unit-tested.
-- **Eval harness (`backend/scripts/eval_harness.py`):** a direct, automatic groundedness/hallucination check needing zero hand-labeled data — for every requirement the rubric marks satisfied, does the cited evidence snippet actually appear in the source resume text? Run for real on `resume_1.pdf`: 15 requirements evaluated, 0 ungrounded citations. A `GOLDEN_SET` slot is scaffolded for real precision/recall once hand-labeled examples exist — that part is still open; be precise in an interview that this is a groundedness-check harness, not a full golden-set eval.
+- **Current validation:** 16 backend tests cover auth, ownership, upload constraints, deduplication, and atomic recruiter approvals; 16 Playwright tests cover desktop/mobile loading, protected routes, keyboard interaction, overflow, browser errors, and serious Axe violations.
+- **Production:** Docker Compose on OCI behind a shared Caddy gateway, with health checks, restart policies, bounded logs, named volumes, and scheduled PostgreSQL backups.
 
 ---
 
-### 2. Agentic RAG Customer Support Platform (Flipkart FAQ)
-**Nov 2025 – Jan 2026**
-[GitHub](https://github.com/Soban-2004/Flipkart_faq_chatbot) · [Live Demo](https://agentic-rag-customer-support-platform.onrender.com)
+### 2. Aster — Agentic RAG Customer Support
+**Nov 2025 – Jan 2026 · Rebuilt Oct 2026**
+[GitHub](https://github.com/Soban-2004/Agentic-RAG-Customer-Support-Platform-Flipkart-FAQ-) · [Live Demo](https://140.245.234.125/aster/)
 
-- Agentic RAG customer support system over a ~2,000-entry Flipkart FAQ corpus — order status, refund tracking, human escalation via MCP tools.
-- Built on LlamaIndex: intent-routing planner, 5 integrated tools (FAQ search + 4 MCP tools), LiteLLM gateway with fallback across 3 models / 2 providers.
-- LLM Guard guardrails (7 parallel scanners) cut latency from ~4.5s → ~1s.
-- Validated via 25-scenario RAGAS evaluation; deployed as Docker container on Render.
+- Production-minded support assistant built on a Flipkart help-centre dataset. Commerce records and handoffs are clearly labelled simulations; it is not connected to Flipkart.
+- Eight bounded intents route turns to deterministic responses, grounded FAQ retrieval, or one authorized account action; off-topic and mixed-scope requests never reach an unrestricted answer path.
+- Versioned Qdrant knowledge collections, Cohere embeddings/reranking, Groq synthesis, citations, and a public-only semantic cache support grounded FAQ answers.
+- Durable WebSocket chat uses typed frames, stable client message IDs, reconnect replay, deadlines, idempotent mutations, and committed completion semantics.
+- PostgreSQL stores accounts, revocable sessions, threads, messages, quotas, and an action ledger; an anonymous demo remains ephemeral.
 
-**Tech:** LlamaIndex, MCP, LiteLLM, Qdrant, Docker, LLM Guard, RAGAS
-**Headline stat:** `4.5s → 1s` latency reduction
+**Tech:** React 19, TypeScript 6, Vite 8, Tailwind CSS 4, FastAPI, WebSockets, LlamaIndex FunctionAgent,
+LiteLLM, Groq, Prompt Guard 2, Cohere, Qdrant 1.16, PostgreSQL 17, Langfuse/OpenInference, Docker, Caddy, OCI
+**Headline stat:** `71/71` deterministic backend and PostgreSQL tests passing
 
 **Recent additions (verified this round):**
-- **Intent-classification eval suite** extending the existing RAGAS harness (`src/eval/run_eval.py`) — a 4th suite, gold-labeled, covering all 5 intents, including a regression case tied to a real production bug (a session-referential meta-question like "what did I just ask" getting globally cached under the wrong intent). Proved its value immediately: caught a live incident on its first real run (next bullet).
-- **Live incident found + fixed:** Groq deprecated both models the LLM gateway depended on (`llama-3.3-70b-versatile`, `llama-3.1-8b-instant`) on Aug 16 — every call had been failing and silently falling through the fallback chain for two weeks, undetected because the intent classifier fails open to a safe default rather than raising. Replaced both with Groq's recommended successors (`openai/gpt-oss-120b` / `openai/gpt-oss-20b` — reasoning models with different failure modes: a hidden reasoning trace can silently consume the whole completion budget and return empty content, or 400 outright under tool-calling). Added automatic `reasoning_effort`/`reasoning_format` handling in the LLM gateway so every caller gets safe behavior with zero per-call changes. Verified against the live API 3 ways: the new intent suite (9/9), the existing tool-calling suite (9/9), and the exact production config (`AGENT_TOOL_CALL_MODEL_KEY=fallback`) — confirmed with real tool calls and correct answers, not just a passing test.
-- **Agent trajectory analysis:** `score_resolution_path()` in `src/observability/tracing.py` tags every chat turn in Langfuse with exactly how it resolved — cache hit, guardrail block, a specific tool call, plain chat, or error — a queryable attribute that didn't exist before, even though Langfuse traces themselves already did.
-- **Multimodal (vision):** a customer can attach a photo of a damaged/defective item. A new `src/gateway/vision.py` sends it to Groq's Llama 4 Scout (natively multimodal), producing a factual description folded into the message as plain-text context before the normal guardrail → intent → agent pipeline runs — no other code needed to change. Wired into both authenticated chat and the public no-login demo. Validated against Groq's documented constraints (4MB base64 cap, JPEG/PNG/WebP only), not assumed limits.
+- **Safety boundary:** identity comes from server-side actor context; authenticated tools recheck session and thread ownership; only one account action may run per turn.
+- **Private cache boundary:** only allowlisted public FAQ questions can enter the shared cache. Account and conversation content cannot.
+- **Knowledge releases:** ingestion builds and validates an immutable collection, then atomically moves the live alias; prior revisions remain available for rollback.
+- **Current validation:** 71/71 deterministic backend/PostgreSQL tests, 24/24 live intent cases, and production WebSocket smoke tests covering citations, tools, notes, simulated handoff, prompt injection, invalid frames, reconnect-safe IDs, and scope control.
+- **Production:** OCI Always Free A1 with Caddy, private PostgreSQL/Qdrant services, non-root containers, health probes, daily backups, and log rotation.
 
 ---
 
@@ -262,13 +265,13 @@ Aug 10) are what determined their relative order below.
 
 **Speech & Voice AI:** Deepgram Nova-3 (STT), Speaker Diarization, Multilingual/Code-Switched Audio
 
-**Vector DB & Retrieval:** Qdrant, Weaviate, Hybrid Search (BM25) & Reranking, Hugging Face Models
+**Vector DB & Retrieval:** Qdrant, Weaviate, Cohere Embeddings & Reranking, Hybrid Search (BM25) & Reranking, Hugging Face Models
 
 **LLMOps & Evaluation:** LiteLLM, LLM Guard, Langfuse, RAGAS, OpenRouter, Groq API, OpenAI API
 
 **Machine Learning:** Scikit-Learn, TensorFlow, NLP (NLTK & spaCy)
 
-**Cloud & DevOps:** Git, GitHub, Docker, Nginx, Redis, Linux, Azure, Oracle Cloud Infrastructure (OCI), Render, Vercel
+**Cloud & DevOps:** Git, GitHub, Docker, Caddy, Nginx, Redis, Linux, Azure, Oracle Cloud Infrastructure (OCI), Render, Vercel
 
 ---
 
@@ -276,8 +279,8 @@ Aug 10) are what determined their relative order below.
 
 | Metric | Value |
 |---|---|
-| Recruiter funnel narrowed | ~95% fewer full rubric reviews |
-| Report latency cut | 4.5s → 1s (7 parallel guardrail scanners) |
+| Aster deterministic validation | 71/71 backend and PostgreSQL tests |
+| Resume Matcher validation | 32 tests (16 backend + 16 Playwright) |
 | Schema scale indexed | 2,000+ HCM tables/views via RAG |
 | Config effort reduced | ~60–70% manual effort automated |
 | OSS PR merged | langchain-ai/langchain #39238 |
@@ -335,7 +338,7 @@ Not included (no reliable source found / not worth featuring): NPTEL IoT certifi
 
 ## 14. Confirmed for build
 
-- **Resume version to use:** Voice AI Engineer resume (2026, has FitNova + Flipkart projects) — confirmed
+- **Resume version to use:** Voice AI Engineer resume (2026, has FitNova + Aster projects) — confirmed
 - **FitNova:** full details pulled from GitHub README — confirmed as flagship project
 - **Cricket project:** confirmed for inclusion as earlier work
 

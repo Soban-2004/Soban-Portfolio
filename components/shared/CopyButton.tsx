@@ -32,9 +32,9 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
         type="button"
         onClick={onClick}
         aria-label={`Copy ${label}`}
-        className="inline-flex items-center text-muted transition-colors duration-150 hover:text-accent active:text-accent"
+        className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-accent/10 hover:text-accent active:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        {copied ? <Check size={12} className="text-accent" /> : <Copy size={12} />}
+        {copied ? <Check size={16} className="text-accent" /> : <Copy size={16} />}
       </button>
       {/* aria-live, not just a visual swap — a screen reader user firing
           this from the button itself has no other cue that anything

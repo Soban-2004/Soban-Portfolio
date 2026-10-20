@@ -24,7 +24,7 @@ export function WhatsSimplifiedToggle() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 px-5 py-4 text-left"
+        className="flex min-h-[44px] w-full items-center justify-between gap-3 px-5 py-4 text-left"
       >
         <span className="font-mono text-sm font-medium text-amber">What&apos;s real vs. what&apos;s simplified</span>
         <ChevronDown

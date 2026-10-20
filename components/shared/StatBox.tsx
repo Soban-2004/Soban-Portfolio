@@ -1,6 +1,5 @@
 "use client";
 
-import { useReducedMotion } from "motion/react";
 import { Reveal } from "@/components/shared/Reveal";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
@@ -38,9 +37,7 @@ export function StatBox({
   // little after the last) instead of all three popping in at once.
   delay?: number;
 }) {
-  const prefersReducedMotion = useReducedMotion();
   const numeric = /^\d+$/.test(value) ? Number(value) : null;
-  const canAnimate = numeric !== null && !prefersReducedMotion;
 
   return (
     <Reveal
@@ -53,7 +50,7 @@ export function StatBox({
       }`}
     >
       <p className={`font-mono text-2xl font-black sm:text-3xl ${filled ? "text-background" : accent}`}>
-        {canAnimate ? <AnimatedNumber target={numeric} /> : value}
+        {numeric !== null ? <AnimatedNumber target={numeric} /> : value}
       </p>
       <p className={`mt-1 font-mono text-xs uppercase tracking-wide ${filled ? "text-background/70" : "text-muted"}`}>
         {label}

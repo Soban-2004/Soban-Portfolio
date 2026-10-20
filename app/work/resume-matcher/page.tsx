@@ -10,33 +10,30 @@ import { projects } from "@/lib/content";
 export const metadata: Metadata = {
   title: "AI Resume & Job Matcher — Soban Shankar",
   description:
-    "How the AI Resume & Job Matcher retrieves, reranks, and corroborates evidence from a candidate's resume — hybrid dense + BM25 search, reciprocal rank fusion, and a GitHub corroboration layer.",
+    "How the AI Resume & Job Matcher combines hybrid retrieval, evidence-grounded verdicts, fabrication checks, and a staged recruiter funnel.",
 };
 
 const project = projects.find((p) => p.id === "resume-matcher")!;
 
-// Two distinct real pipelines in this platform — kept as two separate
-// diagrams rather than merged into one, since they're genuinely different
-// flows: one answers a recruiter's free-form question against a single
-// resume, the other screens an entire applicant pool automatically.
 const RETRIEVAL_PIPELINE: DiagramNode[] = [
-  { id: "query", label: "Query received", detail: "Treated as a recruiter's screening question against one candidate's resume." },
-  { id: "embed", label: "Embedding", detail: "Encoded into a dense vector; a parallel BM25 sparse index is built from the same resume text." },
-  { id: "vector-db", label: "Vector DB — Qdrant", detail: "Dense + sparse search run in parallel, then merged with reciprocal rank fusion." },
-  { id: "rerank", label: "Cross-encoder reranking", detail: "The fused candidates are reranked purely on relevance to the recruiter's exact question." },
-  { id: "corroborate", label: "Corroboration layer", detail: "Weak resume claims are checked against the candidate's live GitHub repo content before the evidence score is upgraded — closes a keyword-stuffing gap." },
-  { id: "answer", label: "Grounded, cited answer", detail: "The LLM only sees the reranked, corroborated evidence — every claim is cited back to an exact resume line." },
+  { id: "requirements", label: "Weighted requirements", detail: "The job description is converted into technical requirements with explicit importance weights." },
+  { id: "chunks", label: "Resume chunks", detail: "PDF, DOCX, or TXT content is parsed into overlapping passages; scanned PDFs can fall back to OCR." },
+  { id: "retrieve", label: "Dense + BM25 retrieval", detail: "Semantic and keyword search run over the same resume evidence." },
+  { id: "fusion", label: "Reciprocal rank fusion", detail: "The two rankings are combined without letting either retrieval method dominate by scale alone." },
+  { id: "rerank", label: "Cohere reranking", detail: "The strongest fused passages are reranked against the exact requirement." },
+  { id: "verdict", label: "Evidence-grounded verdict", detail: "The rubric model evaluates each requirement only against retrieved evidence and keeps missing requirements visible." },
+  { id: "report", label: "Explainable fit report", detail: "The final score weights requirement importance and evidence quality, with citations back to the resume." },
 ];
 
 const EVALUATION_PIPELINE: DiagramNode[] = [
   { id: "prescreen", label: "Dense prescreen", detail: "A fast first pass over the full applicant pool using dense retrieval alone." },
   { id: "skill-match", label: "Skill match", detail: "Prescreened candidates are checked against the role's required skills before anything reaches an LLM." },
-  { id: "llm-review", label: "LLM review", detail: "Only the shortlisted remainder — roughly the top ~5% — gets a full LLM review, cutting full rubric reviews by ~95%." },
+  { id: "llm-review", label: "Evidence review", detail: "Only candidates approved through the first two rounds receive full retrieval and requirement-level LLM review." },
 ];
 
 export default function ResumeMatcherPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-24 pt-28">
+    <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=resume-matcher"
@@ -69,35 +66,35 @@ export default function ResumeMatcherPage() {
       <section className="mt-16">
         <h2 className="font-mono text-sm text-accent-soft">Overview</h2>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A full-stack AI recruitment platform (Next.js 16, FastAPI, Supabase, Qdrant) with two sides: resume
-          analysis for job seekers, and a hiring workflow for recruiters — screening one candidate at a time
-          through free-form Q&amp;A, or an entire applicant pool through an automated shortlist.
+          An evidence-first recruitment platform with two complete product paths. Job seekers can compare a
+          resume with a role, inspect requirement verdicts and supporting excerpts, see honest gaps, generate a
+          cover letter, and create an ATS-oriented resume rewrite that passes a separate fabrication check before
+          it can be accepted and exported as PDF.
         </p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A three-tier LLM fallback chain (Ollama → Gemini → Groq) keeps both flows working through rate limits;
-          Supabase auth and PostgreSQL persist hiring campaigns across sessions.
+          Recruiters create persistent hiring projects, upload up to 25 resumes per batch, and move candidates
+          through a three-round funnel: dense prescreen, lightweight skill matching, then full evidence retrieval
+          and requirement-level review. Every round pauses for approval, and its scores stay in a separate tier
+          because the methods are intentionally different.
         </p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A scanned or photographed resume — no text layer for the PDF parser to read — falls back to OCR
-          automatically once extracted text drops below a length threshold, verified end-to-end against a real
-          zero-text-layer PDF through the actual document-loading entry point, not just unit-tested in isolation.
-          An LRU cache also dedupes repeated Cohere embedding calls for identical text, and job creation across all
-          three intake paths is content-hash idempotent, so a repeat submission returns the original job instead
-          of starting a duplicate.
+          Supabase access tokens are verified on every authenticated request, role guards separate job-seeker and
+          recruiter APIs, and PostgreSQL records are scoped to their owner. Upload limits, filename normalization,
+          rolling rate limits, content-based deduplication, OCR fallback, structured logs, and optional Sentry
+          reporting cover the less visible production paths.
         </p>
         <p className="mt-4 text-pretty text-lg leading-relaxed text-muted">
-          A groundedness eval harness checks the one guarantee the whole pipeline is built around: for every
-          requirement the rubric marks satisfied, does the cited evidence snippet actually appear in the source
-          resume text? Run against a real resume, it evaluated 15 requirements with zero ungrounded citations.
+          The current validation suite passes 16 backend tests and 16 Playwright tests, covering authentication,
+          ownership, upload boundaries, deduplication, recruiter approvals, protected-route redirects, keyboard
+          interaction, responsive overflow, browser errors, and serious accessibility violations.
         </p>
       </section>
 
       {/* 2. Retrieval architecture */}
       <section className="mt-16">
-        <h2 className="font-mono text-sm text-accent-soft">Architecture — Recruiter Q&amp;A</h2>
+        <h2 className="font-mono text-sm text-accent-soft">Architecture — Evidence Matching</h2>
         <p className="mt-4 text-muted">
-          A recruiter asks a free-form question about one candidate; the answer is retrieved and corroborated, not
-          guessed.
+          Each job requirement is evaluated against retrieved resume evidence, with missing requirements left visible.
         </p>
         <div className="mt-8">
           <ArchitectureDiagram nodes={RETRIEVAL_PIPELINE} />
@@ -120,6 +117,6 @@ export default function ResumeMatcherPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>
       </section>
-    </main>
+    </article>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-// A real, if simple, architecture diagram for the AI Architect card —
+// A real, if simple, architecture diagram for the ArchMind card —
 // stands in for the real thing (the brief's own suggested hero visual is
 // "the canvas view mid-simulation: particles animating along edges, a
 // component flagged overloaded in red") until a real screenshot/GIF

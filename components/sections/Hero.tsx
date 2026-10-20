@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { GitHubIcon, LinkedInIcon } from "@/components/shared/BrandIcons";
 import { Button } from "@/components/shared/Button";
 import { CropMarks } from "@/components/shared/CropMarks";
 import { SystemLog } from "@/components/hero/SystemLog";
 import { hero, identity } from "@/lib/content";
-import { BOOT_SESSION_KEY, BOOT_UNLOCK_EVENT } from "@/lib/bootSignal";
+const subscribeToReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const getServerReducedMotion = () => false;
 
 // Evaluated once when this module first loads — which happens as the
 // client bundle is set up, strictly before any component's effects can
@@ -17,8 +24,6 @@ import { BOOT_SESSION_KEY, BOOT_UNLOCK_EVENT } from "@/lib/bootSignal";
 // whether it saw the value before or after that write — a race, not a
 // reliable "was this a fresh session" check. Reading it at module scope
 // sidesteps the race entirely.
-const bootedFresh = typeof window !== "undefined" && !sessionStorage.getItem(BOOT_SESSION_KEY);
-
 export function Hero() {
   // Starts visible — matches the server-rendered markup, so there's no
   // hydration mismatch and no-JS visitors see the content immediately.
@@ -27,27 +32,14 @@ export function Hero() {
   // where it should wait for LoadingScreen's unlock wipe and then fade
   // in left-to-right in the same beat, rather than just popping into
   // view fully rendered underneath the loading screen the whole time.
-  const [ready, setReady] = useState(true);
 
-  useEffect(() => {
-    if (!bootedFresh) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    setReady(false);
-    const onUnlock = () => setReady(true);
-    window.addEventListener(BOOT_UNLOCK_EVENT, onUnlock, { once: true });
-    return () => window.removeEventListener(BOOT_UNLOCK_EVENT, onUnlock);
-  }, []);
 
   // Starts false to match the server render, corrected right after mount
   // — same reasoning as every other reduced-motion check on this site
   // (matchMedia isn't available during SSR, and the hook version of this
   // resolves a render late, which is a real hydration-mismatch risk for
   // anything feeding a Framer style prop, not just a cosmetic delay).
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  useEffect(() => {
-    setPrefersReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
+  const prefersReducedMotion = useSyncExternalStore(subscribeToReducedMotion, getReducedMotion, getServerReducedMotion);
 
   // Two depth layers drifting at different rates as the visitor scrolls
   // past Hero — the glow blob (the "far" layer) moves more, the watermark
@@ -136,11 +128,7 @@ export function Hero() {
           session; a repeat page load or reduced motion just renders this
           at rest (opacity-100/translate-x-0) the whole time, per the
           `ready` state's default. */}
-      <div
-        className={`relative mx-auto w-full max-w-6xl transition-[opacity,transform] duration-700 ease-out ${
-          ready ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"
-        }`}
-      >
+      <div className="relative mx-auto w-full max-w-6xl">
         <div className="flex items-center gap-2 font-mono text-xs text-muted">
           <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
           SYS_STATUS: AVAILABLE — {identity.name.toUpperCase()}
@@ -206,14 +194,14 @@ export function Hero() {
             <a
               href={identity.github}
               aria-label="GitHub"
-              className="flex h-9 w-9 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground sm:h-11 sm:w-11"
+              className="flex h-[44px] w-[44px] items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-accent/10 hover:text-foreground"
             >
               <GitHubIcon size={18} className="sm:size-5" />
             </a>
             <a
               href={identity.linkedin}
               aria-label="LinkedIn"
-              className="flex h-9 w-9 items-center justify-center text-muted transition-colors duration-150 hover:text-foreground sm:h-11 sm:w-11"
+              className="flex h-[44px] w-[44px] items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-accent/10 hover:text-foreground"
             >
               <LinkedInIcon size={18} className="sm:size-5" />
             </a>

@@ -19,7 +19,7 @@ import { useRef, useEffect } from "react";
 import { animate, useInView, useMotionValue, useTransform } from "motion/react";
 
 export function AnimatedNumber({ target, suffix }: { target: number; suffix?: string }) {
-  const motionValue = useMotionValue(0);
+  const motionValue = useMotionValue(target);
   const rounded = useTransform(motionValue, (v) => Math.round(v).toLocaleString());
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
@@ -32,7 +32,7 @@ export function AnimatedNumber({ target, suffix }: { target: number; suffix?: st
   // exact number. jitter is floored at 1 so this still does something
   // visible on small single-digit stats, not just bigger ones.
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const APPROACH_FRACTION = 0.92;
     const RESOLVE_TICKS = 4;
     const RESOLVE_TICK_MS = 55;
@@ -40,6 +40,7 @@ export function AnimatedNumber({ target, suffix }: { target: number; suffix?: st
     const jitter = Math.max(1, Math.round(target * 0.08));
     let resolveInterval: number | undefined;
 
+    motionValue.set(0);
     const controls = animate(motionValue, approach, { duration: 1.15, ease: [0.16, 1, 0.3, 1] });
     controls.then(() => {
       let tick = 0;
@@ -70,7 +71,7 @@ export function AnimatedNumber({ target, suffix }: { target: number; suffix?: st
 
   return (
     <span ref={ref} className="tabular-nums">
-      0{suffix}
+      {target.toLocaleString()}{suffix}
     </span>
   );
 }

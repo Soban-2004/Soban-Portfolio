@@ -12,7 +12,7 @@ export function Contact() {
 
   return (
     <section id="contact" className="mx-auto max-w-6xl px-6 py-12 sm:py-24">
-      <p className="font-mono text-xs text-accent">// 08 — CONTACT</p>
+      <p className="font-mono text-xs text-accent">{"// 08 — CONTACT"}</p>
 
       {/* py-14 (was py-4): on mobile this box was noticeably shorter than
           the section's own scroll-snap target — short enough that the

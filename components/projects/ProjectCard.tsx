@@ -15,8 +15,8 @@ export type ProjectVariant = "flagship" | "alert" | "info" | "standard" | "secon
 
 // Five real project cards now, five distinct border colors — pulled
 // entirely from tokens already in the palette (globals.css): accent
-// (flagship, AI Architect — the current lead project), violet (secondary,
-// FitNova — flagship until AI Architect took the lead slot; kept its own
+// (flagship, ArchMind — the current lead project), violet (secondary,
+// FitNova — flagship until ArchMind took the lead slot; kept its own
 // distinct color rather than being demoted into sharing one), critical
 // (alert, Flipkart — the "latency" story), success/cyan (info, AI Resume
 // Matcher), and amber (standard, Cricket Analysis). standard used to share
@@ -170,7 +170,7 @@ export function ProjectCard({
   // footprint reserved and just paint a shrunken image of itself inside
   // dead space. Left off below sm — the mobile card is already purpose-
   // sized, not scaled down from desktop.
-  const cardClassName = `scroll-mt-24 flex min-h-[365px] flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:min-h-[518px] sm:p-5 sm:[zoom:0.7] ${className}`;
+  const cardClassName = `scroll-mt-24 flex min-h-[365px] flex-col rounded-xl border p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 ${CONTAINER[variant]} ${HOVER_BORDER[variant]} ${HOVER_SHADOW[variant]} sm:min-h-[440px] sm:p-6 ${className}`;
 
   const content = (
     <>
@@ -185,7 +185,7 @@ export function ProjectCard({
 
       {/* text-2xl base (was text-3xl): Press Start 2P is a wide, fixed-
           width-feeling pixel face — at 3xl in a phone-width card, real
-          multi-word titles ("Agentic RAG Customer Support Platform",
+          multi-word titles ("Aster — Agentic RAG Customer Support",
           "FitNova — AI Sales-Call Intelligence System") fit no more than
           1-2 words per line before the 2-line clamp cut them off entirely.
           Dropped one step for the base (<sm, real phones) only; sm:text-4xl
@@ -263,8 +263,8 @@ export function ProjectCard({
         // of which can be long enough to wrap), not a fixed-content grid
         // or an aspect-ratio-boxed image, so a hard-capped box clips it
         // instead of scaling it. Confirmed on the Agentic RAG card
-        // specifically: its 3rd line ("latency: 4.5s -> 1.0s (7 guardrail
-        // scanners)") pushed the panel's real height past the old shared
+        // specifically: a long validation summary pushed the panel's real
+        // height past the old shared
         // h-28 cap by a few px at phone widths, silently cutting the
         // bottom edge off. Sizing to natural content height instead just
         // lets a 3-line terminal be taller than a 2-line one — the card's
@@ -329,13 +329,13 @@ export function ProjectCard({
                 <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-accent"}`}>
                   {project.headlineStat.value}
                 </p>
-                <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>{project.headlineStat.label}</p>
+                <p className={`mt-0.5 font-mono text-[10px] uppercase sm:text-xs ${mutedText}`}>{project.headlineStat.label}</p>
               </div>
               <div className={`rounded-lg border p-2 sm:p-3 ${isFlagship ? "border-background/30" : "border-surface-border"}`}>
                 <p className={`font-mono text-base font-black sm:text-xl ${isFlagship ? "text-background" : "text-foreground"}`}>
                   {project.techTags.length}
                 </p>
-                <p className={`mt-0.5 font-mono text-[9px] uppercase sm:text-[10px] ${mutedText}`}>Technologies</p>
+                <p className={`mt-0.5 font-mono text-[10px] uppercase sm:text-xs ${mutedText}`}>Technologies</p>
               </div>
             </div>
           )}
@@ -356,14 +356,14 @@ export function ProjectCard({
               e.preventDefault();
               onCaseStudyNavigate(linkHref, project.name);
             }}
-            className={`underline-hover inline-flex min-h-9 items-center gap-1.5 font-mono text-xs font-medium sm:min-h-11 sm:text-sm ${isFlagship ? "text-background" : "text-accent"}`}
+            className={`underline-hover inline-flex min-h-[44px] items-center gap-1.5 font-mono text-xs font-medium sm:text-sm ${isFlagship ? "text-background" : "text-accent"}`}
           >
             VIEW_CASE_STUDY <ArrowUpRight size={12} className="sm:size-3.5" />
           </Link>
         ) : (
           <a
             href={linkHref}
-            className={`underline-hover inline-flex min-h-9 items-center gap-1.5 font-mono text-xs font-medium sm:min-h-11 sm:text-sm ${isFlagship ? "text-background" : "text-accent"}`}
+            className={`underline-hover inline-flex min-h-[44px] items-center gap-1.5 font-mono text-xs font-medium sm:text-sm ${isFlagship ? "text-background" : "text-accent"}`}
           >
             VIEW_REPO <ArrowUpRight size={12} className="sm:size-3.5" />
           </a>
@@ -380,7 +380,7 @@ export function ProjectCard({
           // card.
           <a
             href={project.liveUrl}
-            className="invert-static-burst inline-flex min-h-9 items-center gap-1.5 rounded-md border-2 border-critical bg-critical px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wide text-background transition-colors duration-150 hover:bg-transparent hover:text-critical active:bg-transparent active:text-critical sm:min-h-11 sm:px-3 sm:py-1.5 sm:text-sm"
+            className="invert-static-burst inline-flex min-h-[44px] items-center gap-1.5 rounded-md border-2 border-critical bg-critical px-2.5 py-1 font-mono text-xs font-bold uppercase tracking-wide text-background transition-colors duration-150 hover:bg-transparent hover:text-critical active:bg-transparent active:text-critical sm:px-3 sm:py-1.5 sm:text-sm"
           >
             LIVE_LINK <ExternalLink size={12} className="sm:size-3.5" />
           </a>
@@ -389,7 +389,7 @@ export function ProjectCard({
           <a
             href={project.githubUrl}
             aria-label={`${project.name} on GitHub`}
-            className={`ml-auto flex h-9 w-9 items-center justify-center sm:h-11 sm:w-11 ${mutedText} transition-colors duration-150 hover:opacity-70`}
+            className={`ml-auto flex h-[44px] w-[44px] items-center justify-center rounded-md ${mutedText} transition-colors duration-150 hover:bg-black/10 hover:opacity-70`}
           >
             <GitHubIcon size={16} className="sm:size-[18px]" />
           </a>

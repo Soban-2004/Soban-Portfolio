@@ -24,8 +24,17 @@
 // deliberate fix: an earlier pass used its own unrelated cycle for the
 // flash, which read as random relative to the particle motion.
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { motion } from "motion/react";
+
+const subscribeToReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+const getReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const getServerReducedMotion = () => false;
 
 const CLIENT = { x: 170, y: 20 };
 const API = { x: 170, y: 75 };
@@ -82,7 +91,14 @@ function Particle({ from, to, delay }: { from: { x: number; y: number }; to: { x
 }
 
 export function MiniSimulation() {
-  const prefersReducedMotion = useReducedMotion();
+  // Keep the hydration snapshot identical to the server, then update from
+  // matchMedia. useReducedMotion can resolve differently on the first client
+  // render and change the SVG child count during hydration.
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotion,
+    getServerReducedMotion,
+  );
   // One flag per store — a plain timer per store synced to that store's
   // own particle-arrival time (see storeArriveS above), not a single
   // rotating index: two stores' arrivals are close enough together

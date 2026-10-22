@@ -32,7 +32,9 @@ interface PopoverPos {
 
 export function TechGraph() {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [pos, setPos] = useState<PopoverPos | null>(null);
+  const graphRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<number | null>(null);
 
@@ -74,7 +76,7 @@ export function TechGraph() {
     setActiveId(id);
   };
   const deactivate = (id: string) => {
-    setActiveId((cur) => (cur === id ? null : cur));
+    setActiveId((cur) => (cur === id ? pinnedId : cur));
   };
 
   const activeNode = techNodes.find((n) => n.id === activeId);
@@ -88,20 +90,34 @@ export function TechGraph() {
   // it being left floating over the wrong content.
   useEffect(() => {
     if (!activeId) return;
-    const onScroll = () => setActiveId(null);
+    const onScroll = () => {
+      setActiveId(null);
+      setPinnedId(null);
+    };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActiveId(null);
+      if (event.key === "Escape") {
+        setActiveId(null);
+        setPinnedId(null);
+      }
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (pinnedId && !graphRef.current?.contains(event.target as Node)) {
+        setActiveId(null);
+        setPinnedId(null);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [activeId]);
+  }, [activeId, pinnedId]);
 
   return (
-    <div>
+    <div ref={graphRef}>
       <div className="flex flex-col gap-6">
         {CATEGORY_ORDER.map((category) => {
           const nodes = techNodes.filter((n) => n.category === category);
@@ -123,12 +139,21 @@ export function TechGraph() {
                     <button
                       key={node.id}
                       type="button"
-                      aria-pressed={isActive}
+                      aria-pressed={pinnedId === node.id}
                       aria-expanded={isActive}
                       aria-controls={isActive ? "tech-project-popover" : undefined}
                       onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => activate(node.id, e.currentTarget)}
                       onMouseLeave={() => scheduleClose(node.id)}
                       onFocus={(e: FocusEvent<HTMLButtonElement>) => activate(node.id, e.currentTarget)}
+                      onClick={(event) => {
+                        if (pinnedId === node.id) {
+                          setPinnedId(null);
+                          setActiveId(null);
+                        } else {
+                          setPinnedId(node.id);
+                          activate(node.id, event.currentTarget);
+                        }
+                      }}
                       onBlur={(event) => {
                         if (popoverRef.current?.contains(event.relatedTarget as Node | null)) return;
                         scheduleClose(node.id);

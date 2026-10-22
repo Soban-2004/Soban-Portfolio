@@ -8,6 +8,8 @@ import { ArchitectureDiagram, type DiagramNode } from "@/components/shared/Archi
 import { WhatsSimplifiedToggle } from "@/components/work/fitnova/WhatsSimplifiedToggle";
 import { GotchasList } from "@/components/work/fitnova/GotchasList";
 import { projects } from "@/lib/content";
+import { PageTransition } from "@/components/shared/PageTransition";
+import { CaseStudyPager } from "@/components/projects/CaseStudyPager";
 
 export const metadata: Metadata = {
   title: "FitNova — AI Sales-Call Intelligence System | Soban Shankar",
@@ -127,10 +129,12 @@ const WHATS_NEXT = [
 
 export default function FitNovaPage() {
   return (
+    <PageTransition>
     <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=fitnova"
+        transitionTypes={["nav-back"]}
         className="inline-flex min-h-11 items-center gap-1.5 font-mono text-sm text-muted transition-colors duration-150 hover:text-foreground"
       >
         <ArrowLeft size={14} />
@@ -255,6 +259,8 @@ export default function FitNovaPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{fitnova.techTags.join(" · ")}</p>
       </section>
+      <CaseStudyPager currentId={fitnova.id} />
     </article>
+    </PageTransition>
   );
 }

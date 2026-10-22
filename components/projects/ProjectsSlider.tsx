@@ -11,7 +11,7 @@
 // anyone wants to sit through it. A carousel costs the same amount of
 // scrolling whether there are 4 projects or 14; you just click through.
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { addTransitionType, startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, animate, useInView, useMotionValue, useTransform } from "motion/react";
 import { ProjectCard, type ProjectVariant } from "@/components/projects/ProjectCard";
@@ -178,7 +178,12 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
       return;
     }
     setCaseStudyTarget({ href, name });
-    window.setTimeout(() => router.push(href), CASE_STUDY_TRANSITION_MS);
+    window.setTimeout(() => {
+      startTransition(() => {
+        addTransitionType("nav-forward");
+        router.push(href);
+      });
+    }, CASE_STUDY_TRANSITION_MS);
   };
   // amount: 0.6, not "once" — autoplay should stop advancing once the
   // section has mostly scrolled out of view (no point cycling slides
@@ -351,7 +356,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
     }
   };
 
-  const dots = (
+  const projectPicker = (instance: "compact" | "desktop") => (
     <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Select a project">
       {slides.map((s, i) => (
         <button
@@ -360,13 +365,21 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
           onClick={() => handleDotClick(i)}
           aria-label={`View ${s.project.name}`}
           aria-current={i === index}
-          className={`min-h-[44px] shrink-0 rounded-md border px-3 font-mono text-[11px] uppercase transition-colors duration-150 ${
+          className={`relative min-h-[44px] shrink-0 overflow-hidden rounded-md border px-3 font-mono text-[11px] uppercase transition-colors duration-150 ${
             i === index
-              ? "border-accent bg-accent/15 text-accent"
+              ? "border-accent text-accent"
               : "border-surface-border text-muted hover:border-accent/50 hover:text-foreground"
           }`}
         >
-          {s.project.name}
+          {i === index && (
+            <motion.span
+              layoutId={`project-selector-${instance}`}
+              className="absolute inset-0 bg-accent/15"
+              transition={{ duration: 0.25, ease: EASE_DECELERATE }}
+              aria-hidden="true"
+            />
+          )}
+          <span className="relative z-10">{s.project.name}</span>
         </button>
       ))}
     </div>
@@ -539,7 +552,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
         >
           <ArrowGlyph direction="prev" />
         </button>
-        {dots}
+        {projectPicker("compact")}
         <button
           type="button"
           onClick={() => (supportsSwipe ? commitStep(1) : goTo(index + 1, 1))}
@@ -549,7 +562,7 @@ export function ProjectsSlider({ slides }: { slides: ProjectSlide[] }) {
           <ArrowGlyph direction="next" />
         </button>
       </div>
-      <div className="mt-6 hidden justify-center lg:flex">{dots}</div>
+      <div className="mt-6 hidden justify-center lg:flex">{projectPicker("desktop")}</div>
 
       {/* The case-study transition flash — see startCaseStudyTransition
           above. z-[150]: above the nav (z-40) and everything else on the

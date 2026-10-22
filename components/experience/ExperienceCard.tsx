@@ -35,10 +35,10 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
     // than a flat rectangle. Primary gets the fuller-strength version;
     // earlier gets a dimmer one so it still reads as visually secondary.
     <div
-      className={`rounded-md border bg-background p-4 sm:p-6 md:p-8 ${
+      className={`rounded-md border bg-background p-4 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 active:-translate-y-1 sm:p-6 md:p-8 ${
         isPrimary
-          ? "border-accent/60 shadow-[6px_6px_0_0_rgba(62,207,142,0.35)]"
-          : "border-surface-border shadow-[4px_4px_0_0_rgba(232,240,230,0.08)]"
+          ? "border-accent/60 shadow-[6px_6px_0_0_rgba(62,207,142,0.35)] hover:border-accent hover:shadow-[9px_9px_0_0_rgba(62,207,142,0.45)] active:border-accent active:shadow-[9px_9px_0_0_rgba(62,207,142,0.45)]"
+          : "border-surface-border shadow-[4px_4px_0_0_rgba(232,240,230,0.08)] hover:border-surface-border/80 hover:shadow-[7px_7px_0_0_rgba(232,240,230,0.12)] active:border-surface-border/80 active:shadow-[7px_7px_0_0_rgba(232,240,230,0.12)]"
       } ${className}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -48,7 +48,7 @@ export function ExperienceCard({ data, className = "" }: { data: ExperienceCardD
             // surface — Drivestream's logo (like most brand marks) assumes
             // a light background and reads as a near-invisible dark shape
             // without one.
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-foreground/95 p-1.5 sm:h-11 sm:w-11">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-foreground/95 p-1.5 transition-transform duration-200 ease-out hover:rotate-2 hover:scale-105 sm:h-11 sm:w-11">
               <Image
                 src={data.logo.src}
                 alt={data.logo.alt}

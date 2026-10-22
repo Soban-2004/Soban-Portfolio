@@ -9,10 +9,11 @@ import { Certifications } from "@/components/sections/Certifications";
 import { Skills } from "@/components/sections/Skills";
 import { Contact } from "@/components/sections/Contact";
 import { ConsoleEasterEgg } from "@/components/shared/ConsoleEasterEgg";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default function Home() {
   return (
-    <>
+    <PageTransition>
       <ConsoleEasterEgg />
       <Hero />
       <About />
@@ -24,6 +25,6 @@ export default function Home() {
       <Certifications />
       <Skills />
       <Contact />
-    </>
+    </PageTransition>
   );
 }

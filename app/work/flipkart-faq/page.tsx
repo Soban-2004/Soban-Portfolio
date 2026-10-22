@@ -6,6 +6,8 @@ import { Button } from "@/components/shared/Button";
 import { ScrollProgress } from "@/components/shared/ScrollProgress";
 import { ArchitectureDiagram, type DiagramNode } from "@/components/shared/ArchitectureDiagram";
 import { projects } from "@/lib/content";
+import { PageTransition } from "@/components/shared/PageTransition";
+import { CaseStudyPager } from "@/components/projects/CaseStudyPager";
 
 export const metadata: Metadata = {
   title: "Aster — Agentic RAG Customer Support | Soban Shankar",
@@ -27,10 +29,12 @@ const PIPELINE: DiagramNode[] = [
 
 export default function FlipkartFaqPage() {
   return (
+    <PageTransition>
     <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=flipkart-faq"
+        transitionTypes={["nav-back"]}
         className="inline-flex min-h-11 items-center gap-1.5 font-mono text-sm text-muted transition-colors duration-150 hover:text-foreground"
       >
         <ArrowLeft size={14} />
@@ -108,6 +112,8 @@ export default function FlipkartFaqPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>
       </section>
+      <CaseStudyPager currentId={project.id} />
     </article>
+    </PageTransition>
   );
 }

@@ -107,6 +107,7 @@ function HamburgerIcon({ open }: { open: boolean }) {
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [active, setActive] = useState<string>("");
   // mobileOpen is still the one source of truth every existing behavior
   // below (outside-tap close, Escape, body-scroll lock, aria-expanded)
@@ -126,7 +127,11 @@ export function Nav() {
   // a re-render.
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(scrollable > 0 ? Math.min(window.scrollY / scrollable, 1) : 0);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -257,11 +262,18 @@ export function Nav() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className={`font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 hover:text-foreground ${
+                aria-current={active === link.section ? "location" : undefined}
+                className={`relative inline-flex min-h-[44px] items-center font-mono text-xs font-bold uppercase tracking-wide transition-colors duration-150 hover:text-foreground ${
                   active === link.section ? "text-foreground" : "text-muted"
                 }`}
               >
                 {link.label}
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-x-0 bottom-1 h-px origin-left bg-accent transition-transform duration-200 ${
+                    active === link.section ? "scale-x-100" : "scale-x-0"
+                  }`}
+                />
               </Link>
             </li>
           ))}
@@ -364,6 +376,11 @@ export function Nav() {
         </motion.div>
       )}
       </AnimatePresence>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left bg-accent shadow-[0_0_8px_rgba(62,207,142,0.65)] will-change-transform"
+        style={{ transform: `scaleX(${scrollProgress})` }}
+      />
     </header>
   );
 }

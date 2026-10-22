@@ -7,6 +7,7 @@ import { Nav } from "@/components/nav/Nav";
 import { Footer } from "@/components/sections/Footer";
 import { CommandPalette } from "@/components/shared/CommandPalette";
 import { AmbientBackground } from "@/components/shared/AmbientBackground";
+import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { TouchActivate } from "@/components/shared/TouchActivate";
 import { identity } from "@/lib/content";
 
@@ -20,23 +21,30 @@ import { identity } from "@/lib/content";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "block",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "block",
 });
 
 const bungee = Bungee({
   variable: "--font-bungee",
   weight: "400",
   subsets: ["latin"],
+  display: "block",
 });
 
 const pressStart2P = Press_Start_2P({
   variable: "--font-press-start-2p",
   weight: "400",
   subsets: ["latin"],
+  display: "block",
+  // The generated Arial fallback uses a 224% size adjustment for this
+  // pixel face, which can make the hero overlap while the font is loading.
+  adjustFontFallback: false,
 });
 
 const siteUrl = "https://sobanshankar.vercel.app"; // update once a final domain is chosen
@@ -78,6 +86,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${jetbrainsMono.variable} ${bungee.variable} ${pressStart2P.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <LoadingScreen />
         <AmbientBackground />
         <TouchActivate />
         <a href="#main-content" className="skip-link">

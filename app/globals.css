@@ -160,6 +160,8 @@ body {
    green was left. Cut the reach to 0.08em total so black stays the
    dominant fill and green reads as a border/bulge, not the whole glyph. */
 .font-display-3d {
+  /* Avoid the 224%-scaled Arial fallback generated for this pixel face. */
+  font-family: "Press Start 2P", ui-monospace, monospace;
   /* Unlayered, same as the stroke/shadow below — this deliberately rides
      the cascade-layers quirk noted above the h1–h4 rule (an unlayered rule
      always beats a layered Tailwind utility) so this wins over whatever
@@ -172,6 +174,11 @@ body {
     0.04em 0.04em 0 var(--accent),
     0.06em 0.06em 0 var(--accent),
     0.08em 0.08em 0 rgba(11, 13, 10, 0.65);
+}
+
+/* The same pixel face without the hero name's stroke or stacked shadow. */
+.font-pixel {
+  font-family: "Press Start 2P", ui-monospace, monospace;
 }
 
 /*
@@ -742,5 +749,109 @@ main {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+/* Shared route, toast, and selection motion. */
+:root {
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --toast-open: 350ms;
+  --toast-close: 250ms;
+  --toast-distance: 16px;
+  --toast-blur: 2px;
+  --toast-scale: 0.97;
+  --toast-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The first screen resolves in five quick beats instead of appearing as
+   one flat block. Only opacity and transform animate, so the sequence stays
+   cheap and does not compete with the hero's ambient parallax. */
+@keyframes hero-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-intro > * {
+  animation: hero-stage-in 520ms var(--ease-smooth-out) both;
+}
+.hero-intro > :nth-child(1) { animation-delay: 40ms; }
+.hero-intro > :nth-child(2) { animation-delay: 110ms; }
+.hero-intro > :nth-child(3) { animation-delay: 180ms; }
+.hero-intro > :nth-child(4) { animation-delay: 250ms; }
+.hero-intro > :nth-child(5) { animation-delay: 320ms; }
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: -60px;
+  animation:
+    var(--duration-quick) ease-in both page-fade reverse,
+    var(--duration-medium) var(--ease-smooth-out) both page-slide reverse;
+}
+
+::view-transition-new(.nav-forward) {
+  --slide-offset: 60px;
+  animation:
+    210ms ease-out var(--duration-quick) both page-fade,
+    var(--duration-medium) var(--ease-smooth-out) both page-slide;
+}
+
+::view-transition-old(.nav-back) {
+  --slide-offset: 60px;
+  animation:
+    var(--duration-quick) ease-in both page-fade reverse,
+    var(--duration-medium) var(--ease-smooth-out) both page-slide reverse;
+}
+
+::view-transition-new(.nav-back) {
+  --slide-offset: -60px;
+  animation:
+    210ms ease-out var(--duration-quick) both page-fade,
+    var(--duration-medium) var(--ease-smooth-out) both page-slide;
+}
+
+@keyframes page-slide {
+  from { translate: var(--slide-offset); }
+  to { translate: 0; }
+}
+
+@keyframes page-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.t-toast {
+  opacity: 0;
+  transform: translateY(var(--toast-distance)) scale(var(--toast-scale));
+  filter: blur(var(--toast-blur));
+  will-change: transform, opacity, filter;
+  transition:
+    opacity var(--toast-close) var(--toast-ease),
+    transform var(--toast-close) var(--toast-ease),
+    filter var(--toast-close) var(--toast-ease);
+}
+.t-toast.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  transition:
+    opacity var(--toast-open) var(--toast-ease),
+    transform var(--toast-open) var(--toast-ease),
+    filter var(--toast-open) var(--toast-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-toast { transition: none !important; }
+  ::view-transition-old(.nav-forward),
+  ::view-transition-new(.nav-forward),
+  ::view-transition-old(.nav-back),
+  ::view-transition-new(.nav-back) {
+    animation-duration: 1ms !important;
   }
 }

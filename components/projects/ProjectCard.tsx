@@ -346,6 +346,7 @@ export function ProjectCard({
         {isInternal ? (
           <Link
             href={linkHref}
+            transitionTypes={["nav-forward"]}
             onClick={(e) => {
               if (!onCaseStudyNavigate) return;
               // Only intercept a plain left-click — a modifier click

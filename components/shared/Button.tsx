@@ -44,6 +44,7 @@ export function Button({
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [pressed, setPressed] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
   const onPointerMove = (e: PointerEvent<HTMLAnchorElement>) => {
@@ -55,12 +56,16 @@ export function Button({
     setOffset({ x: clamp(px), y: clamp(py) });
   };
 
-  const onPointerLeave = () => setOffset({ x: 0, y: 0 });
+  const onPointerLeave = () => {
+    setOffset({ x: 0, y: 0 });
+    setPressed(false);
+  };
 
   const className = `${base} ${variants[variant]} transition-transform duration-200 ease-out`;
-  const style = { transform: `translate(${offset.x}px, ${offset.y}px)` };
+  const style = { transform: `translate(${offset.x}px, ${offset.y}px) scale(${pressed && !prefersReducedMotion ? 0.98 : 1})` };
+  const isStaticAsset = /\.[a-z0-9]+(?:[?#].*)?$/i.test(href);
 
-  if (!external && href.startsWith("/")) {
+  if (!external && href.startsWith("/") && !isStaticAsset) {
     return (
       <Link
         ref={ref}
@@ -69,6 +74,9 @@ export function Button({
         style={style}
         aria-label={ariaLabel}
         onPointerMove={onPointerMove}
+        onPointerDown={() => setPressed(true)}
+        onPointerUp={() => setPressed(false)}
+        onPointerCancel={() => setPressed(false)}
         onPointerLeave={onPointerLeave}
       >
         {children}
@@ -84,6 +92,9 @@ export function Button({
       style={style}
       aria-label={ariaLabel}
       onPointerMove={onPointerMove}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
       onPointerLeave={onPointerLeave}
     >
       {children}

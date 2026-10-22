@@ -5,6 +5,8 @@ import { GitHubIcon } from "@/components/shared/BrandIcons";
 import { Button } from "@/components/shared/Button";
 import { ScrollProgress } from "@/components/shared/ScrollProgress";
 import { ArchitectureDiagram, type DiagramNode } from "@/components/shared/ArchitectureDiagram";
+import { PageTransition } from "@/components/shared/PageTransition";
+import { CaseStudyPager } from "@/components/projects/CaseStudyPager";
 import { projects } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -99,10 +101,12 @@ const DECISIONS = [
 
 export default function AiArchitectPage() {
   return (
+    <PageTransition>
     <article className="mx-auto max-w-3xl px-6 pb-24 pt-28">
       <ScrollProgress />
       <Link
         href="/#project=ai-architect"
+        transitionTypes={["nav-back"]}
         className="inline-flex min-h-11 items-center gap-1.5 font-mono text-sm text-muted transition-colors duration-150 hover:text-foreground"
       >
         <ArrowLeft size={14} />
@@ -184,6 +188,8 @@ export default function AiArchitectPage() {
         <h2 className="font-mono text-sm text-accent-soft">Tech Stack</h2>
         <p className="mt-4 font-mono text-sm text-muted">{project.techTags.join(" · ")}</p>
       </section>
+      <CaseStudyPager currentId={project.id} />
     </article>
+    </PageTransition>
   );
 }
